@@ -85,12 +85,34 @@ from config import config
 
 
 def eval_function(organism):
-    return sum(organism.evaluate([0, 0]))
+    vals = [[0, 0], [0, 1], [1, 0], [1, 1]]
+    score = 0
+    for val in vals:
+        score += abs(organism.evaluate(val)[0] - (val[0] ^ val[1]))
+    return (4 - score) ** 2
 
 
 def main():
-    population = Population(150, 2, 2, config)
-    population.run(eval_function, 20)
+    population = Population(150, config)
+    winner = population.run(eval_function, 500)
+
+    winner_2 = winner.copy("a")
+    winner_2.mutate()
+
+    print(
+        winner.evaluate([0, 0]),
+        winner.evaluate([0, 1]),
+        winner.evaluate([1, 0]),
+        winner.evaluate([1, 1]),
+    )
+
+    # print([[c.in_node_number, c.out_node_number] for c in winner.connections])
+    # print([[n.index, n.bias] for n in winner.nodes])
+    # print([[c.in_node_number, c.out_node_number, c.weight] for c in winner.connections])
+    # print(winner.evaluate([1, 0, 0])[0])
+    # print(winner.evaluate([1, 0, 1])[0])
+    # print(winner.evaluate([1, 1, 0])[0])
+    # print(winner.evaluate([1, 1, 1])[0])
 
 
 if __name__ == "__main__":
