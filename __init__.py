@@ -13,10 +13,9 @@
 #       - We keep a list of mutations that occur within a generation. If a mutation occurs that has already occurred in that
 #       generation, then we assign the new mutation the same innovation number as the previous mutation.
 #
-# Note: The original paper added a bias node to the input layer. Instead of doing this, we will just add a bias weight to each
+# NOTE: The original paper added a bias node to the input layer. Instead of doing this, we will just add a bias weight to each
 # input node. It's cooler, and I'm much cooler than the original authors. Don't @ me.
-#
-# Connection Mutation:
+#    - This means that we need to implement seperate logic for bias crossover and mutation.
 # - Similar to any NE implementation. Each connection weight is either perturbed or not perturbed.
 #
 # Structural Mutation:
@@ -79,6 +78,8 @@
 # - Chance of structural mutation (connection): 5%
 # - Stagnant species are removed after 15 generations
 
+import random
+import time
 from population import Population
 from organism import Organism
 from config import config
@@ -93,12 +94,14 @@ def eval_function(organism):
 
 
 def main():
-    population = Population(150, config)
-    winner = population.run(eval_function, 500)
+    t = time.time()
+    population = Population(100, config)
+    winner = population.run(eval_function, 300)
 
     winner_2 = winner.copy("a")
     winner_2.mutate()
 
+    # print(winner_2.evaluate([1, 1]))
     print(
         winner.evaluate([0, 0]),
         winner.evaluate([0, 1]),
@@ -107,7 +110,6 @@ def main():
     )
 
     # print([[c.in_node_number, c.out_node_number] for c in winner.connections])
-    # print([[n.index, n.bias] for n in winner.nodes])
     # print([[c.in_node_number, c.out_node_number, c.weight] for c in winner.connections])
     # print(winner.evaluate([1, 0, 0])[0])
     # print(winner.evaluate([1, 0, 1])[0])

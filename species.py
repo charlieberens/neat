@@ -7,6 +7,9 @@ class Species:
         self.representative: Organism = representative
         self.species_number = species_number
         self.members = set([representative])
+        self.age = 0
+        self.best_fitness = -10000
+        self.best_fitness_age = 0
 
     def add_organism(self, organism):
         self.members.add(organism)
@@ -17,19 +20,15 @@ class Species:
         # I think that this is faster. Pure instinct, no real evidence.
         organism_genes = {}
         representative_genes = {}
-        m_organism_innovation_number = 0
-        for connection in organism.connections:
-            organism_genes[connection.innovation_number] = connection
-            if connection.innovation_number > m_organism_innovation_number:
-                m_organism_innovation_number = connection.innovation_number
-        m_representative_innovation_number = 0
-        for connection in self.representative.connections:
-            representative_genes[connection.innovation_number] = connection
-            if connection.innovation_number > m_representative_innovation_number:
-                m_representative_innovation_number = connection.innovation_number
+
+        for gene in organism.connections:
+            organism_genes[gene.innovation_number] = gene
+        for gene in self.representative.connections:
+            representative_genes[gene.innovation_number] = gene
 
         smaller_innovation_number = min(
-            m_organism_innovation_number, m_representative_innovation_number
+            organism.connections[-1].innovation_number,
+            self.representative.connections[-1].innovation_number,
         )
         shared_genes = set(organism_genes.keys()) & set(representative_genes.keys())
         different_genes = set(organism_genes.keys()) ^ set(representative_genes.keys())

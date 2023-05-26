@@ -5,13 +5,11 @@ from itertools import count
 
 
 class Organism:
-    def __init__(
-        self, organism_id: str, innovation_number_counter: count, config: dict
-    ):
+    def __init__(self, organism_id: str, innovation_number_tracker, config: dict):
         self.id: str = organism_id
         self.config: dict = config
         self.node_count: count = count(0)
-        self.innovation_number_counter: count = innovation_number_counter
+        self.innovation_number_tracker = innovation_number_tracker
         self.species = None
 
     def copy(self, organism_id: str):
@@ -19,7 +17,7 @@ class Organism:
         Copy the organism
         """
         new_organism = Organism(
-            organism_id, self.innovation_number_counter, self.config
+            organism_id, self.innovation_number_tracker, self.config
         )
         new_organism.nodes = [n.copy() for n in self.nodes]
         new_organism.connections = [c.copy(new_organism) for c in self.connections]
@@ -39,7 +37,9 @@ class Organism:
             split_connection.in_node.index,
             new_node.index,
             1,
-            next(self.innovation_number_counter),
+            self.innovation_number_tracker(
+                (split_connection.in_node.index, new_node.index)
+            ),
             self.config,
         )
         connection_2 = Connection(
@@ -47,7 +47,12 @@ class Organism:
             new_node.index,
             split_connection.out_node.index,
             split_connection.weight,
-            next(self.innovation_number_counter),
+            self.innovation_number_tracker(
+                (
+                    new_node.index,
+                    split_connection.out_node.index,
+                )
+            ),
             self.config,
         )
         self.connections.append(connection_1)
@@ -92,7 +97,12 @@ class Organism:
                 random.uniform(
                     self.config["weight_min_value"], self.config["weight_max_value"]
                 ),
-                next(self.innovation_number_counter),
+                self.innovation_number_tracker(
+                    (
+                        in_node.index,
+                        out_node.index,
+                    )
+                ),
                 self.config,
             )
         )
@@ -128,29 +138,34 @@ class Organism:
             if random.random() < self.config["connection_mut_rate"]:
                 self.create_connection()
 
+        if random.random() < self.config["enable_mut_rate"]:
+            connection = random.choice(self.connections)
+            connection.enabled = True
+
     def get_input_layer(self):
         """
         Return the input layer
         """
         return self.nodes[0 : self.config["input_nodes"]]
 
-    def creates_cycle(self, connection):
+    def creates_cycle(self, test_connection):
         """
         Check if the connection creates a cycle
         """
-        if connection.in_node == connection.out_node:
+        if test_connection.in_node == test_connection.out_node:
             return True
 
         visited = set()
-        visited.add(connection.in_node)
+        visited.add(test_connection.in_node)
         while True:
             num_added = 0
             for connection in self.connections:
-                if connection.out_node in visited:
-                    return True
-                if connection.in_node in visited:
+                if connection.in_node in visited and connection.out_node not in visited:
+                    if connection.out_node == test_connection.in_node:
+                        return True
                     visited.add(connection.out_node)
                     num_added += 1
+                    break
 
             if num_added == 0:
                 # No new nodes were added this cycle
@@ -238,10 +253,8 @@ class BaseOrganism(Organism):
     self.nodes is an array of nodes
     """
 
-    def __init__(
-        self, organism_id: str, innovation_number_counter: count, config: dict
-    ):
-        super().__init__(organism_id, innovation_number_counter, config)
+    def __init__(self, organism_id: str, innovation_number_tracker, config: dict):
+        super().__init__(organism_id, innovation_number_tracker, config)
         self.nodes = [
             InputNode(
                 -1 - i,
@@ -279,10 +292,85 @@ class BaseOrganism(Organism):
                         random.uniform(
                             config["weight_min_value"], config["weight_max_value"]
                         ),
-                        next(self.innovation_number_counter),
+                        self.innovation_number_tracker(
+                            (
+                                input_node_index,
+                                output_node_index,
+                            )
+                        ),
                         config,
                     )
                 )
+
+
+class CrossOverOrganism(Organism):
+    def __init__(
+        self,
+        organism_id: str,
+        innovation_number_tracker,
+        parent1,
+        parent2,
+        config: dict,
+    ):
+        super().__init__(organism_id, innovation_number_tracker, config)
+
+        self.connections = []
+        self.parent1 = parent1
+        self.parent2 = parent2
+        self.generate_connections()
+
+    def generate_connections(self):
+        i = 0
+        j = 0
+        a_shared = []
+        b_shared = []
+        a_disjoint = []
+        b_disjoint = []
+        a_excess = []
+        b_excess = []
+
+        while True:
+            if i > len(self.parent1.connections) - 1:
+                b_excess = self.parent2.connections[j:]
+                break
+            if j > len(self.parent2.connections) - 1:
+                a_excess = self.parent1.connections[i:]
+                break
+
+            a_gene = self.parent1.connections[i]
+            b_gene = self.parent2.connections[j]
+
+            if a_gene.innovation_number == b_gene.innovation_number:
+                a_shared.append(a_gene)
+                b_shared.append(b_gene)
+                i += 1
+                j += 1
+            else:
+                if a_gene.innovation_number < b_gene.innovation_number:
+                    a_disjoint.append(a_gene)
+                    i += 1
+                else:
+                    b_disjoint.append(b_gene)
+                    j += 1
+
+        # TODO - Mutate Bias
+        if self.parent1.fitness > self.parent2.fitness:
+            self.nodes = [n.copy() for n in self.parent1.nodes]
+        else:
+            self.nodes = [n.copy() for n in self.parent2.nodes]
+
+        for a_gene, b_gene in zip(a_shared, b_shared):
+            if random.random() < 0.5:
+                self.connections.append(a_gene.copy(self))
+            else:
+                self.connections.append(b_gene.copy(self))
+
+        if self.parent1.fitness > self.parent2.fitness:
+            self.connections += [gene.copy(self) for gene in a_disjoint]
+            self.connections += [gene.copy(self) for gene in a_excess]
+        else:
+            self.connections += [gene.copy(self) for gene in b_disjoint]
+            self.connections += [gene.copy(self) for gene in b_excess]
 
 
 class Node:

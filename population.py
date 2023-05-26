@@ -1,3 +1,4 @@
+import random
 import time
 from activations import sigmoid
 from organism import Organism, BaseOrganism
@@ -77,6 +78,9 @@ class Population:
                     ],
                 )
             )
+            if self.config["goal_fitness"] != None:
+                if self.best.fitness >= self.config["goal_fitness"]:
+                    return self.best
             reproducer.reproduce()
             self.generation += 1
 

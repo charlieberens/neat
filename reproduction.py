@@ -1,7 +1,15 @@
 import math
 import random
 import time
-from organism import Organism, BaseOrganism, InputNode, OutputNode, Connection, Node
+from organism import (
+    CrossOverOrganism,
+    Organism,
+    BaseOrganism,
+    InputNode,
+    OutputNode,
+    Connection,
+    Node,
+)
 from itertools import count
 from species import Species
 
@@ -13,6 +21,19 @@ class Reproducer:
         self.generation_organism_number = count(0)
         self.innovation_number_counter = innovation_number_counter
         self.species_number = count(0)
+        self.species: Species = set()
+        self.generation_innovations = {}
+
+        def innovation_number_tracker(innovation):
+            if innovation in self.generation_innovations.keys():
+                return self.generation_innovations[innovation]
+            else:
+                self.generation_innovations[innovation] = next(
+                    self.innovation_number_counter
+                )
+                return self.generation_innovations[innovation]
+
+        self.generation_innovation_number_tracker = innovation_number_tracker
 
     def asexual_reproduction(self, organism):
         """
@@ -23,6 +44,24 @@ class Reproducer:
                 self.population.generation, next(self.generation_organism_number)
             )
         )
+        # Mutate the new organism
+        new_organism.mutate()
+        return new_organism
+
+    def sexual_reproduction(self, parent1, parent2):
+        """
+        Crossover
+        """
+        new_organism = CrossOverOrganism(
+            "{}_{:02X}".format(
+                self.population.generation, next(self.generation_organism_number)
+            ),
+            self.generation_innovation_number_tracker,
+            parent1,
+            parent2,
+            self.config,
+        )
+
         # Mutate the new organism
         new_organism.mutate()
         return new_organism
@@ -39,7 +78,7 @@ class Reproducer:
                         self.population.generation,
                         next(self.generation_organism_number),
                     ),
-                    self.innovation_number_counter,
+                    self.generation_innovation_number_tracker,
                     self.config,
                 )
             )
@@ -70,6 +109,7 @@ class Reproducer:
         independents = set(self.population.organisms)
         while len(independents):
             candidate = independents.pop()
+
             for species in self.population.species:
                 if species.compatible(candidate):
                     species.add_organism(candidate)
@@ -82,7 +122,18 @@ class Reproducer:
 
     def calculate_species_allocation(self):
         for species in self.population.species.copy():
-            if len(species.members) == 0:
+            species.age += 1
+            species.best_fitness_age += 1
+            for member in species.members:
+                if member.fitness > species.best_fitness:
+                    species.best_fitness = member.fitness
+                    species.best_fitness_age = 0
+
+            if len(species.members) == 0 or (
+                len(self.population.species) >= 2
+                and self.config["stagnation_threshold"] > 0
+                and species.best_fitness_age >= self.config["stagnation_threshold"]
+            ):
                 self.population.species.remove(species)
 
         for species in self.population.species:
@@ -122,23 +173,38 @@ class Reproducer:
         """
         Reproduce the current generation
         """
+
+        test = self.population.organisms.pop()
+
         self.generation_organism_number = count(0)
         self.population.organisms = set()
-        print(len(self.population.organisms))
 
         self.calculate_species_allocation()
 
         for species in self.population.species:
+            species.age += 1
             # Remove the worst performing organisms
             members = sorted(list(species.members), key=lambda o: o.adjusted_fitness)
             if len(members) > 5:
                 self.population.organisms.add(members[-1])
             for i in range(species.allocation - 1):
-                # Choose a random parent weighted by fitness
-                parent = random.choices(
-                    members, weights=[o.adjusted_fitness for o in members]
-                )[0]
-                self.population.organisms.add(self.asexual_reproduction(parent))
+                if random.random() < self.config["interspecies_mating_rate"]:
+                    species2 = random.choice(list(self.population.species))
+                    parent1 = random.choice(list(species.members))
+                    parent2 = random.choice(list(species2.members))
+                    self.population.organisms.add(
+                        self.sexual_reproduction(parent1, parent2)
+                    )
+                else:
+                    if random.random() < self.config["crossover_rate"]:
+                        parent1 = random.choice(members)
+                        parent2 = random.choice(members)
+                        self.population.organisms.add(
+                            self.sexual_reproduction(parent1, parent2)
+                        )
+                    else:
+                        parent = random.choice(members)
+                        self.population.organisms.add(self.asexual_reproduction(parent))
 
         # for i in range(self.population.n):
         #     species = random.choice(list(self.population.species))
