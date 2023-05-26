@@ -1,14 +1,15 @@
+import random
+import time
 from activations import sigmoid
 from organism import Organism, BaseOrganism
 from reproduction import Reproducer
+from itertools import count
 
 
 class Population:
     def __init__(
         self,
         n: int,
-        input_nodes: int,
-        output_nodes: int,
         config: dict,
     ):
         """
@@ -16,58 +17,15 @@ class Population:
         ----------
             n: int
                 Number of genomes in the population
-            input_nodes: int
-                Number of input nodes
-            output_nodes: int
-                Number of output nodes
-            transfer_function: function
-                Transfer function for the nodes
-            c1: float
-                Speciation parameter
-            c2: float
-                Speciation parameter
-            c3: float
-                Speciation parameter
-            delta_thresh: float
-                Speciation parameter
-            weight_mut_rate: float
-                Chance of weight mutation
-            weight_perturb_rate: float
-                Chance of perturbing weight
-            weight_max_value: float
-                Maximum value of a weight
-            weight_min_value: float
-                Minimum value of a weight
-            bias_mut_rate: float
-                Chance of bias mutation
-            bias_perturb_rate: float
-                Chance of perturbing bias
-            bias_max_value: float
-                Maximum value of a bias
-            bias_min_value: float
-                Minimum value of a bias
-            nodal_mut_rate: float
-                Chance of nodal mutation
-            connection_mut_rate: float
-                Chance of connection mutation
-            enable_rate: float
-                Chance of enabling a disabled gene
-            crossover_rate: float
-                Chance of crossover
-            interspecies_mating_rate: float
-                Chance of interspecies mating
-            stagnation_threshold: int
-                Number of generations without improvement before a species is considered stagnant
-            elimination_threshold: int
-                Proportion of organisms to eliminate from a species
         """
         self.n = n
-        self.input_nodes = input_nodes
-        self.output_nodes = output_nodes
+        self.input_nodes = config["input_nodes"]
+        self.output_nodes = config["output_nodes"]
         self.config = config
         self.generation = 0
-        self.innovation_number = 0
-        self.organisms = []
+        self.innovation_number = count(0)
+        self.organisms = set()
+        self.species = set()
 
     def evaluate_generation(self, eval_func) -> Organism:
         """
@@ -77,24 +35,53 @@ class Population:
 
         for organism in self.organisms:
             organism.fitness = eval_func(organism)
+            organism.adjusted_fitness = organism.fitness / len(organism.species.members)
             if not best or organism.fitness > best.fitness:
                 best = organism
 
         return best
 
-    def run(self, eval_func, generations):
+    def run(self, eval_func, generations) -> Organism:
         """
         Run the population for a number of generations
         """
-        reproducer = Reproducer(self)
+        reproducer = Reproducer(self, self.innovation_number)
         reproducer.create_initial_generation()
 
         for i in range(generations):
             self.best = self.evaluate_generation(eval_func)
             print(
-                "Generation: {} - ID: {} - Best: {}".format(
-                    self.generation, self.best.id, self.best.fitness
+                "Generation: {} - ID: {} - Best: {} - Species: {} - Organisms: {} - Avg Nodes: {} - Node Range: {} - Connection Range: {}".format(
+                    self.generation,
+                    self.best.id,
+                    self.best.fitness,
+                    len(self.species),
+                    len(self.organisms),
+                    sum([len(o.nodes) for o in self.organisms]) / len(self.organisms),
+                    [
+                        min([len(o.nodes) for o in self.organisms]),
+                        max([len(o.nodes) for o in self.organisms]),
+                    ],
+                    [
+                        min(
+                            [
+                                len([c for c in o.connections if c.enabled])
+                                for o in self.organisms
+                            ]
+                        ),
+                        max(
+                            [
+                                len([c for c in o.connections if c.enabled])
+                                for o in self.organisms
+                            ]
+                        ),
+                    ],
                 )
             )
+            if self.config["goal_fitness"] != None:
+                if self.best.fitness >= self.config["goal_fitness"]:
+                    return self.best
             reproducer.reproduce()
             self.generation += 1
+
+        return self.best

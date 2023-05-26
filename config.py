@@ -1,8 +1,12 @@
-from activations import sigmoid
+from activations import sigmoid, modified_sigmoid
 
 """
 Parameters
 ----------
+    input_nodes: int
+        Number of input nodes
+    output_nodes: int
+        Number of output nodes
     transfer_function: function
         Transfer function for the nodes
     c1: float
@@ -29,7 +33,9 @@ Parameters
         Maximum value of a bias
     bias_min_value: float
         Minimum value of a bias
-    nodal_mut_rate: float
+    single_structural_mutation: bool
+        Whether to only allow one structural mutation per mutation
+    node_mut_rate: float
         Chance of nodal mutation
     connection_mut_rate: float
         Chance of connection mutation
@@ -46,28 +52,33 @@ Parameters
 """
 
 defaults = {
-    "transfer_function": sigmoid,
+    "input_nodes": 2,
+    "output_nodes": 1,
+    "goal_fitness": 15.999,
+    "transfer_function": modified_sigmoid,
     "c1": 1.0,
     "c2": 1.0,
     "c3": 0.4,
     "delta_thresh": 3.0,
     "weight_mut_rate": 0.8,
     "weight_perturb_rate": 0.9,
-    "weight_perturb_amount": 0.5,
+    "weight_perturb_amount": 5,
     "weight_max_value": 10.0,
     "weight_min_value": -10.0,
-    "bias_mut_rate": 0.2,
+    "bias_mut_rate": 0.8,
     "bias_perturb_rate": 0.9,
-    "bias_perturb_amount": 0.5,
-    "bias_max_value": 10.0,
-    "bias_min_value": -10.0,
-    "nodal_mut_rate": 0.03,
+    "bias_perturb_amount": 1,
+    "bias_max_value": 2,
+    "bias_min_value": -2,
+    "single_structural_mutation": True,
+    "node_mut_rate": 0.03,
     "connection_mut_rate": 0.05,
-    "enable_rate": 0.25,
+    "enable_mut_rate": 0,
     "crossover_rate": 0.75,
     "interspecies_mating_rate": 0.001,
-    "stagnation_threshold": 15,
-    "elimination_threshold": 0.5,
+    "stagnation_threshold": 0,
+    "elimination_threshold": 0.25,
+    "min_species_size": 5,
 }
 
 config = defaults.copy()
