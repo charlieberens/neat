@@ -1,23 +1,49 @@
+import datetime
+import os
+import pickle
 import random
+import time
 from utils import clamp
 from copy import deepcopy
 from itertools import count
 
 
 class Organism:
-    def __init__(self, organism_id: str, innovation_number_tracker, config: dict):
+    def __init__(
+        self, organism_id: str, innovation_number_tracker, config: dict, population
+    ):
         self.id: str = organism_id
         self.config: dict = config
         self.node_count: count = count(0)
         self.innovation_number_tracker = innovation_number_tracker
         self.species = None
+        self.population = population
+
+    def from_file(filename: str):
+        """
+        Load an organism from a file
+        """
+        organism_dict = pickle.load(open(filename, "rb"))
+        return Organism.from_dict(organism_dict)
+
+    def from_dict(organism_dict: dict):
+        id = organism_dict["meta"]["id"]
+        config = organism_dict["config"]
+        organism = Organism(id, None, config, None)
+
+        organism.nodes = [Node.from_dict(n, config) for n in organism_dict["nodes"]]
+        organism.connections = [
+            Connection.from_dict(c, organism, config)
+            for c in organism_dict["connections"]
+        ]
+        return organism
 
     def copy(self, organism_id: str):
         """
         Copy the organism
         """
         new_organism = Organism(
-            organism_id, self.innovation_number_tracker, self.config
+            organism_id, self.innovation_number_tracker, self.config, self.population
         )
         new_organism.nodes = [n.copy() for n in self.nodes]
         new_organism.connections = [c.copy(new_organism) for c in self.connections]
@@ -211,6 +237,41 @@ class Organism:
             s = s.union(t)
         return list(s)
 
+    def to_file(self, filename=None):
+        """
+        filename: str
+            filename relative to the organism directory
+        Save the essential information to a file.
+        """
+        readable_time = datetime.datetime.fromtimestamp(time.time()).strftime(
+            "%Y-%m-%d"
+        )
+        filename = filename or "{}_{}_{}".format(
+            readable_time, self.species.species_number, self.id
+        )
+        organism_dictionary = self.to_dict()
+        organism_dictionary["config"] = self.config
+        path = os.path.join(self.config["organism_directory"], filename)
+        if not os.path.exists(self.config["organism_directory"]):
+            os.makedirs(self.config["organism_directory"])
+        with open(path, "wb") as file:
+            pickle.dump(organism_dictionary, file)
+
+    def to_dict(self):
+        nodes = [{"bias": n.bias, "index": n.index} for n in self.nodes]
+        connections = [
+            {
+                "weight": c.weight,
+                "enabled": c.enabled,
+                "in_node_number": c.in_node_number,
+                "out_node_number": c.out_node_number,
+                "innovation_number": c.innovation_number,
+            }
+            for c in self.connections
+        ]
+        meta = {"id": self.id}
+        return {"nodes": nodes, "connections": connections, "meta": meta}
+
     def evaluate(self, inputs):
         """
         Takes inputs [-1, -2, -3, ... -n] and returns outputs [0, 1, 2, ... m-1]
@@ -221,11 +282,11 @@ class Organism:
         if len(inputs) != self.config["input_nodes"]:
             raise ValueError(f"Expected {len(layers[0])} inputs, got {len(inputs)}")
 
-        for i, input_node in enumerate(layers[0 : self.config["input_nodes"]]):
-            input_node.value = inputs[i]
-
         for node in self.nodes:
-            node.value += node.bias
+            node.value = node.bias
+
+        for i, input_node in enumerate(layers[0 : self.config["input_nodes"]]):
+            input_node.value += inputs[i]
 
         for connection in self.connections:
             if connection.enabled:
@@ -253,8 +314,10 @@ class BaseOrganism(Organism):
     self.nodes is an array of nodes
     """
 
-    def __init__(self, organism_id: str, innovation_number_tracker, config: dict):
-        super().__init__(organism_id, innovation_number_tracker, config)
+    def __init__(
+        self, organism_id: str, innovation_number_tracker, config: dict, population
+    ):
+        super().__init__(organism_id, innovation_number_tracker, config, population)
         self.nodes = [
             InputNode(
                 -1 - i,
@@ -312,7 +375,9 @@ class CrossOverOrganism(Organism):
         parent2,
         config: dict,
     ):
-        super().__init__(organism_id, innovation_number_tracker, config)
+        super().__init__(
+            organism_id, innovation_number_tracker, config, parent1.population
+        )
 
         self.connections = []
         self.parent1 = parent1
@@ -380,6 +445,16 @@ class Node:
         self.config: dict = config
         self.index: int = index
 
+    def from_dict(dictionary, config):
+        """
+        Creates a node from a dictionary
+        """
+        return Node(
+            dictionary["bias"],
+            dictionary["index"],
+            config,
+        )
+
     def perturb_bias(self):
         self.bias += random.uniform(
             -self.config["bias_perturb_amount"], self.config["bias_perturb_amount"]
@@ -428,6 +503,20 @@ class Connection:
         self.enabled: bool = enabled
         self.innovation_number: int = innovation_number
         self.config: dict = config
+
+    def from_dict(dictionary, organism: Organism, config):
+        """
+        Creates a connection from a dictionary
+        """
+        return Connection(
+            organism,
+            dictionary["in_node_number"],
+            dictionary["out_node_number"],
+            dictionary["weight"],
+            dictionary["innovation_number"],
+            config,
+            dictionary["enabled"],
+        )
 
     def copy(self, new_organism: Organism):
         return Connection(

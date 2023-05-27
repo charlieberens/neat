@@ -51,10 +51,19 @@ Parameters
         Proportion of organisms to eliminate from a species
 """
 
+"""
+Other Config
+------------
+    stat_directory:
+        Directory to save statistics to (used by StatReporter)
+    progress_directory:
+        Directory to save progress to (used by ProgressReporter)
+"""
+
 defaults = {
     "input_nodes": 2,
     "output_nodes": 1,
-    "goal_fitness": 15.999,
+    "goal_fitness": 14,
     "transfer_function": modified_sigmoid,
     "c1": 1.0,
     "c2": 1.0,
@@ -79,6 +88,9 @@ defaults = {
     "stagnation_threshold": 0,
     "elimination_threshold": 0.25,
     "min_species_size": 5,
+    "stat_directory": "statistics",
+    "progress_directory": "progress",
+    "organism_directory": "organisms",
 }
 
 config = defaults.copy()

@@ -83,39 +83,4 @@ import time
 from population import Population
 from organism import Organism
 from config import config
-
-
-def eval_function(organism):
-    vals = [[0, 0], [0, 1], [1, 0], [1, 1]]
-    score = 0
-    for val in vals:
-        score += abs(organism.evaluate(val)[0] - (val[0] ^ val[1]))
-    return (4 - score) ** 2
-
-
-def main():
-    t = time.time()
-    population = Population(100, config)
-    winner = population.run(eval_function, 300)
-
-    winner_2 = winner.copy("a")
-    winner_2.mutate()
-
-    # print(winner_2.evaluate([1, 1]))
-    print(
-        winner.evaluate([0, 0]),
-        winner.evaluate([0, 1]),
-        winner.evaluate([1, 0]),
-        winner.evaluate([1, 1]),
-    )
-
-    # print([[c.in_node_number, c.out_node_number] for c in winner.connections])
-    # print([[c.in_node_number, c.out_node_number, c.weight] for c in winner.connections])
-    # print(winner.evaluate([1, 0, 0])[0])
-    # print(winner.evaluate([1, 0, 1])[0])
-    # print(winner.evaluate([1, 1, 0])[0])
-    # print(winner.evaluate([1, 1, 1])[0])
-
-
-if __name__ == "__main__":
-    main()
+from reporter import PrintReporter, StatReporter

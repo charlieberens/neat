@@ -40,7 +40,7 @@ class Reproducer:
         Create a new organism from a single parent
         """
         new_organism = organism.copy(
-            "{}_{:02X}".format(
+            "{}-{:02X}".format(
                 self.population.generation, next(self.generation_organism_number)
             )
         )
@@ -53,7 +53,7 @@ class Reproducer:
         Crossover
         """
         new_organism = CrossOverOrganism(
-            "{}_{:02X}".format(
+            "{}-{:02X}".format(
                 self.population.generation, next(self.generation_organism_number)
             ),
             self.generation_innovation_number_tracker,
@@ -74,12 +74,13 @@ class Reproducer:
         for i in range(self.population.n):
             self.population.organisms.add(
                 BaseOrganism(
-                    "{}_{:02X}".format(
+                    "{}-{:02X}".format(
                         self.population.generation,
                         next(self.generation_organism_number),
                     ),
                     self.generation_innovation_number_tracker,
                     self.config,
+                    self.population,
                 )
             )
 

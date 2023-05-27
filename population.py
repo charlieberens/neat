@@ -1,4 +1,5 @@
 import random
+import string
 import time
 from activations import sigmoid
 from organism import Organism, BaseOrganism
@@ -11,12 +12,17 @@ class Population:
         self,
         n: int,
         config: dict,
+        id: str = "".join(random.choices(string.digits + string.ascii_uppercase, k=6)),
     ):
         """
         Parameters
         ----------
             n: int
                 Number of genomes in the population
+            config: dict
+                Configuration dictionary
+            id: str
+                ID of the population. Used for saving progress, statistics, etc.
         """
         self.n = n
         self.input_nodes = config["input_nodes"]
@@ -26,6 +32,13 @@ class Population:
         self.innovation_number = count(0)
         self.organisms = set()
         self.species = set()
+        self.reporters = []
+        self.id = id
+
+    def add_reporter(self, *reporters):
+        for reporter in reporters:
+            reporter.population = self
+            self.reporters.append(reporter)
 
     def evaluate_generation(self, eval_func) -> Organism:
         """
@@ -50,38 +63,19 @@ class Population:
 
         for i in range(generations):
             self.best = self.evaluate_generation(eval_func)
-            print(
-                "Generation: {} - ID: {} - Best: {} - Species: {} - Organisms: {} - Avg Nodes: {} - Node Range: {} - Connection Range: {}".format(
-                    self.generation,
-                    self.best.id,
-                    self.best.fitness,
-                    len(self.species),
-                    len(self.organisms),
-                    sum([len(o.nodes) for o in self.organisms]) / len(self.organisms),
-                    [
-                        min([len(o.nodes) for o in self.organisms]),
-                        max([len(o.nodes) for o in self.organisms]),
-                    ],
-                    [
-                        min(
-                            [
-                                len([c for c in o.connections if c.enabled])
-                                for o in self.organisms
-                            ]
-                        ),
-                        max(
-                            [
-                                len([c for c in o.connections if c.enabled])
-                                for o in self.organisms
-                            ]
-                        ),
-                    ],
-                )
-            )
+
+            for reporter in self.reporters:
+                reporter.report()
+
             if self.config["goal_fitness"] != None:
                 if self.best.fitness >= self.config["goal_fitness"]:
-                    return self.best
+                    return self.end_training(self.best)
             reproducer.reproduce()
             self.generation += 1
 
-        return self.best
+        return self.end_training(self.best)
+
+    def end_training(self, return_value):
+        for reporter in self.reporters:
+            reporter.complete()
+        return return_value
