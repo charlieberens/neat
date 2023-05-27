@@ -1,3 +1,4 @@
+import json
 from activations import sigmoid, modified_sigmoid
 
 """
@@ -94,3 +95,14 @@ defaults = {
 }
 
 config = defaults.copy()
+
+
+def get_config(file):
+    """
+    Load a config from a file
+    """
+    file_config = {}
+    if file:
+        with open(file, "r") as f:
+            file_config = json.load(f)
+    return config | file_config
