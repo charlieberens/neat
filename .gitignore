@@ -4,3 +4,4 @@ venv
 statistics
 organisms
 dist
+*.egg-info

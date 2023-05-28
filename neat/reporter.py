@@ -1,8 +1,6 @@
 import os
 from typing import List
 from neat.population import Population
-import pandas as pd
-
 
 class Reporter:
     """
@@ -110,20 +108,26 @@ class StatReporter:
                 }
             )
 
-    def write_to_csv(self, df):
+    def write_to_csv(self):
         self.filename = self.filename or "{}.csv".format(self.population.id)
         path = os.path.join(self.population.config["stat_directory"], self.filename)
         # Check if stat directory exists
         if not os.path.exists(self.population.config["stat_directory"]):
             os.makedirs(self.population.config["stat_directory"])
+        
+        arr = [["generation"] + [stat for stat in self.stats]] + self.rows
+        
         if os.path.exists(path):
-            df.to_csv(path, mode="a", header=False, index=False)
+            with open(path, "a") as f:
+                for row in arr:
+                    f.write(",".join([str(col) for col in row]) + "\n")
         else:
-            df.to_csv(path, index=False)
+            with open(path, "w") as f:
+                for row in arr:
+                    f.write(",".join([str(col) for col in row]) + "\n")
 
     def complete(self):
-        df = pd.DataFrame(self.rows)
-        self.write_to_csv(df)
+        self.write_to_csv()
 
 
 class ProgressReporter:
