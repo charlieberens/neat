@@ -1,5 +1,5 @@
 import json
-from activations import sigmoid, modified_sigmoid
+from neat.activations import sigmoid, modified_sigmoid
 
 """
 Parameters

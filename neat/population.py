@@ -1,9 +1,9 @@
 import random
 import string
 import time
-from activations import sigmoid
-from organism import Organism, BaseOrganism
-from reproduction import Reproducer
+from neat.activations import sigmoid
+from neat.organism import Organism, BaseOrganism
+from neat.reproduction import Reproducer
 from itertools import count
 
 

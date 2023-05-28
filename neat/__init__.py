@@ -77,10 +77,3 @@
 # - Chance of structural mutation (nodal): 3%
 # - Chance of structural mutation (connection): 5%
 # - Stagnant species are removed after 15 generations
-
-import random
-import time
-from population import Population
-from organism import Organism
-from config import config
-from reporter import PrintReporter, StatReporter

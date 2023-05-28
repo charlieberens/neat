@@ -1,6 +1,6 @@
 import os
 from typing import List
-from population import Population
+from neat.population import Population
 import pandas as pd
 
 

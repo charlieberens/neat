@@ -3,7 +3,7 @@ import os
 import pickle
 import random
 import time
-from utils import clamp
+from neat.utils import clamp
 from copy import deepcopy
 from itertools import count
 

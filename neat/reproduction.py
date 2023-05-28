@@ -1,7 +1,7 @@
 import math
 import random
 import time
-from organism import (
+from neat.organism import (
     CrossOverOrganism,
     Organism,
     BaseOrganism,
@@ -11,7 +11,7 @@ from organism import (
     Node,
 )
 from itertools import count
-from species import Species
+from neat.species import Species
 
 
 class Reproducer:
