@@ -97,7 +97,7 @@ defaults = {
 config = defaults.copy()
 
 
-def get_config(file):
+def get_config(file=None):
     """
     Load a config from a file
     """
