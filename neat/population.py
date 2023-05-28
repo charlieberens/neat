@@ -40,22 +40,32 @@ class Population:
             reporter.population = self
             self.reporters.append(reporter)
 
-    def evaluate_generation(self, eval_func) -> Organism:
+    def evaluate_generation(self, eval_func, en_masse) -> Organism:
         """
         Evaluate the current generation
         """
         best = None
 
-        for organism in self.organisms:
-            organism.layers = organism.calculate_layers()
-            organism.fitness = eval_func(organism)
-            organism.adjusted_fitness = organism.fitness / len(organism.species.members)
-            if not best or organism.fitness > best.fitness:
-                best = organism
+        if en_masse:
+            for i, organism in enumerate(self.organisms):
+                organism.layers = organism.calculate_layers()
+            fitnesses = eval_func(self.organisms)
+            for i, organism in enumerate(self.organisms):
+                organism.fitness = fitnesses[i]
+                organism.adjusted_fitness = organism.fitness / len(organism.species.members)
+                if not best or organism.fitness > best.fitness:
+                    best = organism
+        else:
+            for organism in self.organisms:
+                organism.layers = organism.calculate_layers()
+                organism.fitness = eval_func(organism)
+                organism.adjusted_fitness = organism.fitness / len(organism.species.members)
+                if not best or organism.fitness > best.fitness:
+                    best = organism
 
         return best
 
-    def run(self, eval_func, generations) -> Organism:
+    def run(self, eval_func, generations, en_masse=False) -> Organism:
         """
         Run the population for a number of generations
         """
@@ -63,7 +73,7 @@ class Population:
         reproducer.create_initial_generation()
 
         for i in range(generations):
-            self.best = self.evaluate_generation(eval_func)
+            self.best = self.evaluate_generation(eval_func, en_masse)
 
             for reporter in self.reporters:
                 reporter.report()
