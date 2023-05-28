@@ -280,7 +280,7 @@ class Organism:
         layers = self.calculate_layers()
 
         if len(inputs) != self.config["input_nodes"]:
-            raise ValueError(f"Expected {len(layers[0])} inputs, got {len(inputs)}")
+            raise ValueError("Expected {} inputs, got {}".format(self.config["input_nodes"], len(inputs)))
 
         for node in self.nodes:
             node.value = node.bias
