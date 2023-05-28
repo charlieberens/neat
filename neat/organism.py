@@ -279,7 +279,8 @@ class Organism:
         layers = [
             node.bias for node in self.layers
         ]
-        connections = []
+        connection_pairs = []
+        connection_weights = []
         for connection in self.connections:
             if connection.enabled:
                 # find the layer of the in_node
@@ -292,8 +293,9 @@ class Organism:
                     if connection.out_node == node:
                         out_node = i
 
-                connections.append((in_node, out_node, connection.weight))
-        return layers, connections
+                connection_pairs.append((in_node, out_node))
+                connection_weights.append(connection.weight)
+        return layers, connection_pairs, connection_weights
         
     def evaluate(self, inputs):
         """
