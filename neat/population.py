@@ -47,6 +47,7 @@ class Population:
         best = None
 
         for organism in self.organisms:
+            organism.layers = organism.calculate_layers()
             organism.fitness = eval_func(organism)
             organism.adjusted_fitness = organism.fitness / len(organism.species.members)
             if not best or organism.fitness > best.fitness:

@@ -277,7 +277,6 @@ class Organism:
         Takes inputs [-1, -2, -3, ... -n] and returns outputs [0, 1, 2, ... m-1]
         Where n is the number of input nodes and m is the number of output nodes
         """
-        layers = self.calculate_layers()
 
         if len(inputs) != self.config["input_nodes"]:
             raise ValueError("Expected {} inputs, got {}".format(self.config["input_nodes"], len(inputs)))
@@ -285,7 +284,7 @@ class Organism:
         for node in self.nodes:
             node.value = node.bias
 
-        for i, input_node in enumerate(layers[0 : self.config["input_nodes"]]):
+        for i, input_node in enumerate(self.layers[0 : self.config["input_nodes"]]):
             input_node.value += inputs[i]
 
         for connection in self.connections:
@@ -302,9 +301,6 @@ class Organism:
                 + self.config["output_nodes"]
             ]
         ]
-
-        for node in self.nodes:
-            node.value = 0
 
         return output
 
