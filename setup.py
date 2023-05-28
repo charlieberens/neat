@@ -14,7 +14,7 @@ setup(
     keywords = "NEAT neuroevolution reinforcement-learning",
     url = "https://github.com/charlieberens/neat",
     packages=['neat'],
-    long_description=read('README'),
+    long_description=read('README.md'),
     classifiers=[
     "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
