@@ -272,6 +272,29 @@ class Organism:
         meta = {"id": self.id}
         return {"nodes": nodes, "connections": connections, "meta": meta}
 
+    def get_network_structure(self):
+        """
+            Returns a list of layers and connections which can be quickly evaluated
+        """
+        layers = [
+            node.bias for node in self.layers
+        ]
+        connections = []
+        for connection in self.connections:
+            if connection.enabled:
+                # find the layer of the in_node
+                in_node = 0
+                out_node = 0
+
+                for i,node in enumerate(self.layers):
+                    if connection.in_node == node:
+                        in_node = i
+                    if connection.out_node == node:
+                        out_node = i
+
+                connections.append((in_node, out_node, connection.weight))
+        return layers, connections
+        
     def evaluate(self, inputs):
         """
         Takes inputs [-1, -2, -3, ... -n] and returns outputs [0, 1, 2, ... m-1]
@@ -280,22 +303,17 @@ class Organism:
 
         if len(inputs) != self.config["input_nodes"]:
             raise ValueError("Expected {} inputs, got {}".format(self.config["input_nodes"], len(inputs)))
-        t = time.time()
         for i,node in enumerate(self.layers):
             if i < self.config["input_nodes"]:
                 node.value = inputs[i] + node.bias
             else:
                 node.value = node.bias
-        self.population.timers[0] += time.time() - t
-        t = time.time()
         for connection in self.connections:
             if connection.enabled:
                 connection.out_node.value += (
                     self.config["transfer_function"](connection.in_node.value)
                     * connection.weight
                 )
-        self.population.timers[1] += time.time() - t
-        t = time.time()
 
         output = [
             self.config["transfer_function"](output_node.value)
@@ -304,7 +322,6 @@ class Organism:
                 + self.config["output_nodes"]
             ]
         ]
-        self.population.timers[2] += time.time() - t
 
         return output
 
