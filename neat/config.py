@@ -105,4 +105,5 @@ def get_config(file=None):
     if file:
         with open(file, "r") as f:
             file_config = json.load(f)
-    return config | file_config
+    config.update(file_config)
+    return config

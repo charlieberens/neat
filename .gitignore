@@ -5,3 +5,4 @@ statistics
 organisms
 dist
 *.egg-info
+config.json
