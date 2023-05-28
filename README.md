@@ -7,5 +7,5 @@ This is a Python implementation of the **NeuroEvolution of Augmenting Topologies
 I stay  mostly faithful to the original paper. The one major change that I made (that stuck) is how I implement biases. The authors of the originial paper simply added an input pin with a value of 1 to their networks. I, on the other hand, give each node its own bias value.   
 
 ## Installation
-run `pip install berens-neat`
+```pip install berens-neat```
 
