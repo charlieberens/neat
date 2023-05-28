@@ -15,6 +15,7 @@ setup(
     url = "https://github.com/charlieberens/neat",
     packages=['neat'],
     long_description=read('README.md'),
+    install_requires=["numpy", "pandas"],
     classifiers=[
     "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
