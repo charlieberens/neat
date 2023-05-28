@@ -280,19 +280,22 @@ class Organism:
 
         if len(inputs) != self.config["input_nodes"]:
             raise ValueError("Expected {} inputs, got {}".format(self.config["input_nodes"], len(inputs)))
-
-        for node in self.nodes:
-            node.value = node.bias
-
-        for i, input_node in enumerate(self.layers[0 : self.config["input_nodes"]]):
-            input_node.value += inputs[i]
-
+        t = time.time()
+        for i,node in enumerate(self.layers):
+            if i < self.config["input_nodes"]:
+                node.value = inputs[i] + node.bias
+            else:
+                node.value = node.bias
+        self.population.timers[0] += time.time() - t
+        t = time.time()
         for connection in self.connections:
             if connection.enabled:
                 connection.out_node.value += (
                     self.config["transfer_function"](connection.in_node.value)
                     * connection.weight
                 )
+        self.population.timers[1] += time.time() - t
+        t = time.time()
 
         output = [
             self.config["transfer_function"](output_node.value)
@@ -301,6 +304,7 @@ class Organism:
                 + self.config["output_nodes"]
             ]
         ]
+        self.population.timers[2] += time.time() - t
 
         return output
 

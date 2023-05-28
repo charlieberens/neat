@@ -34,6 +34,7 @@ class Population:
         self.species = set()
         self.reporters = []
         self.id = id
+        self.timers = [0,0,0]
 
     def add_reporter(self, *reporters):
         for reporter in reporters:
