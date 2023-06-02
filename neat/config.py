@@ -64,7 +64,7 @@ Other Config
 defaults = {
     "input_nodes": 2,
     "output_nodes": 1,
-    "goal_fitness": 14,
+    "goal_fitness": 100000,
     "transfer_function": modified_sigmoid,
     "c1": 1.0,
     "c2": 1.0,
