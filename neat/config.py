@@ -1,5 +1,6 @@
 import json
-from neat.activations import sigmoid, modified_sigmoid
+from neat.activations import activation_mapper
+
 
 """
 Parameters
@@ -22,6 +23,8 @@ Parameters
         Chance of weight mutation
     weight_perturb_rate: float
         Chance of perturbing weight
+    weight_perturb_amount: float
+        Amount to perturb weight by
     weight_max_value: float
         Maximum value of a weight
     weight_min_value: float
@@ -30,6 +33,8 @@ Parameters
         Chance of bias mutation
     bias_perturb_rate: float
         Chance of perturbing bias
+    bias_perturb_amount: float
+        Amount to perturb bias by
     bias_max_value: float
         Maximum value of a bias
     bias_min_value: float
@@ -40,7 +45,7 @@ Parameters
         Chance of nodal mutation
     connection_mut_rate: float
         Chance of connection mutation
-    enable_rate: float
+    enable_mut_rate: float
         Chance of enabling a disabled gene
     crossover_rate: float
         Chance of crossover
@@ -50,6 +55,8 @@ Parameters
         Number of generations without improvement before a species is considered stagnant
     elimination_threshold: int
         Proportion of organisms to eliminate from a species
+    min_species_size: int
+        Minimum number of organisms in a species
 """
 
 """
@@ -65,7 +72,7 @@ defaults = {
     "input_nodes": 2,
     "output_nodes": 1,
     "goal_fitness": None,
-    "transfer_function": modified_sigmoid,
+    "transfer_function": "modified_sigmoid",
     "c1": 1.0,
     "c2": 1.0,
     "c3": 0.4,
@@ -86,7 +93,7 @@ defaults = {
     "enable_mut_rate": 0,
     "crossover_rate": 0.75,
     "interspecies_mating_rate": 0.001,
-    "stagnation_threshold": 0,
+    "stagnation_threshold": 20,
     "elimination_threshold": 0.25,
     "min_species_size": 5,
     "stat_directory": "statistics",
@@ -106,4 +113,10 @@ def get_config(file=None):
         with open(file, "r") as f:
             file_config = json.load(f)
     config.update(file_config)
+    try:
+        config["activation"] = activation_mapper[config["transfer_function"]]
+    except KeyError:
+        raise KeyError(
+            f"Transfer function {config['transfer_function']} is not a valid activation"
+        )
     return config

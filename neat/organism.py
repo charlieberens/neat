@@ -276,9 +276,10 @@ class Organism:
         """
             Returns a list of layers and connections which can be quickly evaluated
         """
+        #  Ensure that the last layer is the output layer
         layers = [
-            node.bias for node in self.layers
-        ]
+            node.bias for node in self.layers if node not in self.nodes[self.config["input_nodes"]:self.config["input_nodes"]+self.config["output_nodes"]]
+        ] + [node.bias for node in self.nodes[self.config["input_nodes"]:self.config["input_nodes"]+self.config["output_nodes"]]]
         connection_pairs = []
         connection_weights = []
         for connection in self.connections:
