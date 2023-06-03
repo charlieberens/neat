@@ -24,6 +24,8 @@ pip install berens-neat
 
 (4) Define a function that calculates the fitness for an organism.
 
+-   Note: Be sure to scale your input values to (0,1). Not doing so can result in errors or armageddon or something.
+
 (5) Call `<population>.run(<eval_function>, <generation_count>`. This will return the best organism after <generation_count> generations.
 
 ### Example XOR

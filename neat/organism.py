@@ -217,8 +217,6 @@ class Organism:
                 )
                 - s
             )
-            # print([connection.out_node for connection in self.connections])
-            # print([connection.in_node for connection in self.connections])
 
             # Keep only the nodes that have all their inputs in s
             t = set()
@@ -233,9 +231,21 @@ class Organism:
             if not t:
                 break
 
-            layers.append(t)
             s = s.union(t)
         return list(s)
+    
+    def order_connections(self):
+        """
+        Order the connections in the network based on node order
+        """
+        # This is absurdly inefficient, but do I care? No!
+        layers = self.calculate_layers()
+        ordered_connections = []
+        for layer in layers:
+            for connection in self.connections:
+                if connection.out_node == layer:
+                    ordered_connections.append(connection)
+        return ordered_connections
 
     def to_file(self, filename=None):
         """
@@ -282,7 +292,7 @@ class Organism:
         ] + [node.bias for node in self.nodes[self.config["input_nodes"]:self.config["input_nodes"]+self.config["output_nodes"]]]
         connection_pairs = []
         connection_weights = []
-        for connection in self.connections:
+        for connection in self.ordered_connections:
             if connection.enabled:
                 # find the layer of the in_node
                 in_node = 0
@@ -311,7 +321,7 @@ class Organism:
                 node.value = inputs[i] + node.bias
             else:
                 node.value = node.bias
-        for connection in self.connections:
+        for connection in self.ordered_connections:
             if connection.enabled:
                 connection.out_node.value += (
                     self.config["transfer_function"](connection.in_node.value)
