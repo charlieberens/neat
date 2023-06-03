@@ -240,12 +240,7 @@ class Organism:
         """
         # This is absurdly inefficient, but do I care? No!
         layers = self.calculate_layers()
-        ordered_connections = []
-        for layer in layers:
-            for connection in self.connections:
-                if connection.out_node == layer:
-                    ordered_connections.append(connection)
-        return ordered_connections
+        self.connections.sort(key=lambda x: x.in_node.index)
 
     def to_file(self, filename=None):
         """
@@ -292,7 +287,7 @@ class Organism:
         ] + [node.bias for node in self.nodes[self.config["input_nodes"]:self.config["input_nodes"]+self.config["output_nodes"]]]
         connection_pairs = []
         connection_weights = []
-        for connection in self.ordered_connections:
+        for connection in self.connections:
             if connection.enabled:
                 # find the layer of the in_node
                 in_node = 0

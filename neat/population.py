@@ -49,7 +49,7 @@ class Population:
         if en_masse:
             for i, organism in enumerate(self.organisms):
                 organism.layers = organism.calculate_layers()
-                organism.ordered_connections = organism.order_connections()
+                organism.order_connections()
             fitnesses = eval_func(self.organisms)
             for i, organism in enumerate(self.organisms):
                 organism.fitness = fitnesses[i]
@@ -59,7 +59,7 @@ class Population:
         else:
             for organism in self.organisms:
                 organism.layers = organism.calculate_layers()
-                organism.ordered_connections = organism.order_connections()
+                organism.order_connections()
                 organism.fitness = eval_func(organism)
                 organism.adjusted_fitness = organism.fitness / len(organism.species.members)
                 if not best or organism.fitness > best.fitness:
