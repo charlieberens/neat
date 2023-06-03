@@ -114,7 +114,7 @@ def get_config(file=None):
             file_config = json.load(f)
     config.update(file_config)
     try:
-        config["activation"] = activation_mapper[config["transfer_function"]]
+        config["transfer_function"] = activation_mapper[config["transfer_function"]]
     except KeyError:
         raise KeyError(
             f"Transfer function {config['transfer_function']} is not a valid activation"
