@@ -79,9 +79,9 @@ This is useful when used with `get_network_structure` to calculate fitnesses in 
 
 `organism.get_network_structure` takes no arguments and returns (`layers`, `connection_pairs`, `connection_weights`).
 
-`layers` is an array representing the nodes of the network. The first m inputs are the input nodes and the last k are the output nodes. Each entry in `layers` is the corresponding node's bias. \_\_\_\_ < Shouldn't it be the connections that are sorted >
+`layers` is an array representing the nodes of the network. The first m inputs are the input nodes and the last k are the output nodes. Each entry in `layers` is the corresponding node's bias.
 
-`connection_pairs` is an array of tuples of the form `(in_node, out_node)`, where `in_node` and `out_node` are integers representing the index of the in and out node in the `layers` list.
+`connection_pairs` is an array of tuples of the form `(in_node, out_node)`, where `in_node` and `out_node` are integers representing the index of the in and out node in the `layers` list. Connections are ordered so that they can be evaluated in order. (A connection b's in node will have all of its in-connections evaluated before b is evaluated).
 
 `connection_weights` is an array of floats representing the weight of the ith connection in `connection_pairs`.
 
