@@ -237,8 +237,7 @@ class Organism:
         Order the connections in the network based on node order
         """
         # This is absurdly inefficient, but do I care? No!
-        layers = self.calculate_layers()
-        self.connections.sort(key=lambda x: x.in_node.index)
+        self.connections.sort(key=lambda x: self.layers.index(x.in_node))
 
     def to_file(self, filename=None):
         """
