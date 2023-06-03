@@ -14,7 +14,6 @@ class Organism:
     ):
         self.id: str = organism_id
         self.config: dict = config
-        self.node_count: count = count(0)
         self.innovation_number_tracker = innovation_number_tracker
         self.species = None
         self.population = population
@@ -47,7 +46,6 @@ class Organism:
         )
         new_organism.nodes = [n.copy() for n in self.nodes]
         new_organism.connections = [c.copy(new_organism) for c in self.connections]
-        new_organism.node_count = deepcopy(self.node_count)
         return new_organism
 
     def create_node(self):
@@ -56,7 +54,7 @@ class Organism:
         """
         split_connection = random.choice(self.connections)
         split_connection.enabled = False
-        new_node = Node(0, next(self.node_count), self.config)
+        new_node = Node(0, len(self.nodes), self.config)
         self.nodes.append(new_node)
         connection_1 = Connection(
             self,
@@ -343,10 +341,11 @@ class BaseOrganism(Organism):
         self, organism_id: str, innovation_number_tracker, config: dict, population
     ):
         super().__init__(organism_id, innovation_number_tracker, config, population)
+        node_count = count(0)
         self.nodes = [
             InputNode(
                 -1 - i,
-                next(self.node_count),
+                next(node_count),
                 random.uniform(
                     self.config["bias_min_value"], self.config["bias_max_value"]
                 ),
@@ -356,7 +355,7 @@ class BaseOrganism(Organism):
         ] + [
             OutputNode(
                 i,
-                next(self.node_count),
+                next(node_count),
                 random.uniform(
                     self.config["bias_min_value"], self.config["bias_max_value"]
                 ),
