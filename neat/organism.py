@@ -321,7 +321,7 @@ class Organism:
                 node.value = inputs[i] + node.bias
             else:
                 node.value = node.bias
-        for connection in self.ordered_connections:
+        for connection in self.connections:
             if connection.enabled:
                 connection.out_node.value += (
                     self.config["transfer_function"](connection.in_node.value)
