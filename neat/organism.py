@@ -52,7 +52,7 @@ class Organism:
         """
         Add a node to the organism
         """
-        split_connection = random.choice(self.connections)
+        split_connection = random.choice([c for c  in self.connections if c.enabled])
         split_connection.enabled = False
         new_node = Node(0, len(self.nodes), self.config)
         self.nodes.append(new_node)
@@ -180,7 +180,7 @@ class Organism:
             return True
 
         visited = set()
-        visited.add(test_connection.in_node)
+        visited.add(test_connection.out_node)
         while True:
             num_added = 0
             for connection in self.connections:
