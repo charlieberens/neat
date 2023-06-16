@@ -52,7 +52,8 @@ class Organism:
         """
         Add a node to the organism
         """
-        split_connection = random.choice([c for c  in self.connections if c.enabled])
+        a = len(self.connections)
+        split_connection = random.choice([c for c in self.connections if c.enabled])
         split_connection.enabled = False
         new_node = Node(0, len(self.nodes), self.config)
         self.nodes.append(new_node)
@@ -200,17 +201,17 @@ class Organism:
         Take the graph of nodes and connections and calculate a possible set of layers
         """
 
-        layers = self.get_input_layer()
-        s = set(layers)
+        nodes = self.get_input_layer()
+        s = set(nodes)
         # print("s", s)
         while True:
             # Get all next nodes
             c = (
                 set(
                     [
-                        connection.out_node
-                        for connection in self.connections
-                        if connection.in_node in s and connection.out_node not in s
+                        c.out_node
+                        for c in self.connections
+                        if c.in_node in s 
                     ]
                 )
                 - s
@@ -220,9 +221,9 @@ class Organism:
             t = set()
             for node in c:
                 if all(
-                    connection.in_node in s
-                    for connection in self.connections
-                    if connection.out_node == node
+                    c.in_node in s
+                    for c in self.connections
+                    if c.out_node == node
                 ):
                     t.add(node)
 
@@ -230,7 +231,8 @@ class Organism:
                 break
 
             s = s.union(t)
-        return list(s)
+            nodes += list(t)
+        return nodes
     
     def order_connections(self):
         """
@@ -300,11 +302,15 @@ class Organism:
                 connection_weights.append(connection.weight)
         return layers, connection_pairs, connection_weights
         
-    def evaluate(self, inputs):
+    def evaluate(self, inputs, calculate_layers=False):
         """
         Takes inputs [-1, -2, -3, ... -n] and returns outputs [0, 1, 2, ... m-1]
         Where n is the number of input nodes and m is the number of output nodes
         """
+
+        if calculate_layers:
+            self.layers = self.calculate_layers()
+            self.order_connections()
 
         if len(inputs) != self.config["input_nodes"]:
             raise ValueError("Expected {} inputs, got {}".format(self.config["input_nodes"], len(inputs)))
@@ -449,9 +455,13 @@ class CrossOverOrganism(Organism):
 
         for a_gene, b_gene in zip(a_shared, b_shared):
             if random.random() < 0.5:
-                self.connections.append(a_gene.copy(self))
+                new_a_gene = a_gene.copy(self)
+                new_a_gene.enabled = b_gene.enabled or a_gene.enabled
+                self.connections.append(new_a_gene)
             else:
-                self.connections.append(b_gene.copy(self))
+                new_b_gene = b_gene.copy(self)
+                new_b_gene.enabled = a_gene.enabled or b_gene.enabled
+                self.connections.append(new_b_gene)
 
         if self.parent1.fitness > self.parent2.fitness:
             self.connections += [gene.copy(self) for gene in a_disjoint]
