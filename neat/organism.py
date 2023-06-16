@@ -231,7 +231,7 @@ class Organism:
                 break
 
             s = s.union(t)
-            nodes += list(t)
+            nodes.append(list(t))
         return nodes
     
     def order_connections(self):
@@ -239,7 +239,9 @@ class Organism:
         Order the connections in the network based on node order
         """
         # This is absurdly inefficient, but do I care? No!
-        self.connections.sort(key=lambda x: self.layers.index(x.in_node))
+
+        # self.connections.sort(key=lambda x: self.layers.index(x.in_node))
+        pass
 
     def to_file(self, filename=None):
         """
@@ -314,11 +316,12 @@ class Organism:
 
         if len(inputs) != self.config["input_nodes"]:
             raise ValueError("Expected {} inputs, got {}".format(self.config["input_nodes"], len(inputs)))
-        for i,node in enumerate(self.layers):
-            if i < self.config["input_nodes"]:
-                node.value = inputs[i] + node.bias
-            else:
-                node.value = node.bias
+        for i, layer in enumerate(self.layers[0]):
+            for node in layer:
+                if i == 0:
+                    node.value = inputs[i] + node.bias
+                else:
+                    node.value = node.bias
         for connection in self.connections:
             if connection.enabled:
                 connection.out_node.value += (
