@@ -28,33 +28,6 @@ pip install git+https://github.com/charlieberens/neat.git
 
 (5) Call `<population>.run(<eval_function>, <generation_count>`. This will return the best organism after <generation_count> generations.
 
-### Example XOR
-
-```python
-from neat.population import Population
-from neat.config import get_config
-from neat.reporter import PrintReporter
-
-config = get_config() # We will use the default settings for this example
-p = Population(100, config)
-p.add_reporter(PrintReporter())
-
-def eval_func(organism):
-  inputs = [[0,0],[0,1], [1,0], [1,1]]
-  expected_outputs = [0,1,1,0]
-  err = 0
-  for i in range(4):
-    actual_output = organism.evaluate(inputs[i])
-    err += abs(actual_output - expected_outputs[i])
-
-  return 16 - err*err
-
-winner = p.run(eval_func, 100)
-
-for input in [[0,0],[0,1], [1,0], [1,1]]:
-  print(p.evaluate(input))
-```
-
 ## Evalution
 
 ### Population Options
