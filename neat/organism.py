@@ -3,6 +3,9 @@ import os
 import pickle
 import random
 import time
+import cv2
+
+import numpy as np
 from neat.utils import clamp
 from copy import deepcopy
 from itertools import count
@@ -30,19 +33,6 @@ class Organism:
         """
         organism_dict = pickle.load(open(filename, "rb"))
         return Organism.from_dict(organism_dict)
-
-    def from_dict(organism_dict: dict):
-        # id = organism_dict["meta"]["id"]
-        # config = organism_dict["config"]
-        # organism = Organism(id, None, config, None)
-
-        # organism.nodes = [Node.from_dict(n, config) for n in organism_dict["nodes"]]
-        # organism.connections = [
-        #     Connection.from_dict(c, organism, config)
-        #     for c in organism_dict["connections"]
-        # ]
-        return
-        return organism
 
     def __copy__(self):
         """
@@ -231,9 +221,28 @@ class Organism:
             os.makedirs(self.config["organism_directory"])
         with open(path, "wb") as file:
             pickle.dump(organism_dictionary, file)
+        print("Saved organism to {}".format(path))
 
     def to_dict(self):
-        pass
+        dictionary = {
+            "meta": {
+                "id": self.id,
+            },
+            "config": self.config,
+            "connections": [c.to_dict() for c in self.connections],
+        }
+        return dictionary
+
+    def from_dict(organism_dict: dict):
+        id = organism_dict["meta"]["id"]
+        config = organism_dict["config"]
+        organism = Organism(id, None, config, None)
+
+        organism.connections = [
+            ConnectionGene.from_dict(c)
+            for c in organism_dict["connections"]
+        ]
+        return organism
 
     def get_network_structure(self):
         """
@@ -268,10 +277,73 @@ class Organism:
                         raise IndexError("Index error in evaluate")
         
         return [node_values[n] for n in layered_nodes[-1]]
-                
+    
+    def draw(self, node_radius=16, line_thickness=1, node_margin_y=32, node_margin_x=64, padding=100, show=True, filename=None):
+        """
+        Draw the network, optionally to a file
+        """
+        def get_positions(layer, layer_index, node_index, canvas, padding, node_radius, node_margin_x, node_margin_y, line=False, output=False):
+            y_pos = int(canvas.shape[0] // 2 + (node_index - len(layer) / 2) * (node_radius + node_margin_y)) + node_margin_y // 2
+            x_pos = padding + layer_index * (node_radius + node_margin_x) + node_radius
 
+            if line:
+                if output:
+                    x_pos += node_radius
+                else:
+                    x_pos -= node_radius
 
+            return x_pos, y_pos
 
+        _, layers = self.get_layered_connections()
+        connections = [(c.input_node, c.output_node, c.enabled) for c in self.connections]
+
+        # Create a canvas
+        canvas = np.zeros((2* padding + max([len(l) for l in layers]) * (node_radius + node_margin_y) - node_margin_y, 2* padding + (node_radius + node_margin_x) * len(layers) - node_margin_x, 3), dtype=np.uint8)
+        canvas += 255
+        print(canvas.shape)
+
+        # Draw nodes
+        for i, layer in enumerate(layers):
+            for j, node in enumerate(layer):
+                if i == 0:
+                    if j == len(layer) - 1:
+                        color = (255, 100, 100)
+                    else:
+                        color = (100, 100, 255)
+                elif i == len(layers) - 1:
+                    color = (100, 255, 100)
+                else:
+                    color = (150, 150, 150)
+
+                x_pos, y_pos = get_positions(layer, i, j, canvas, padding, node_radius, node_margin_x, node_margin_y)
+                cv2.circle(canvas, (x_pos, y_pos), node_radius, color, -1)
+
+        for in_node, out_node, enabled in connections:
+            if enabled:
+                color = (0, 0, 0)
+            else:
+                color = (200, 200, 0)
+
+            for i, layer in enumerate(layers):
+                for j, node in enumerate(layer):
+                    if node == in_node:
+                        x_pos1, y_pos1 = get_positions(layer, i, j, canvas, padding, node_radius, node_margin_x, node_margin_y, True, True)
+                    if node == out_node:
+                        x_pos2, y_pos2 = get_positions(layer, i, j, canvas, padding, node_radius, node_margin_x, node_margin_y, True, False)
+            
+            cv2.line(canvas, (x_pos1, y_pos1), (x_pos2, y_pos2), color, line_thickness)
+        
+        # Draw to screen
+        if show:
+            cv2.namedWindow("Display", cv2.WINDOW_AUTOSIZE)
+            cv2.imshow("Display", canvas)
+
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+        
+        # Save to file
+        if filename is not None:
+            cv2.imwrite(filename, canvas)
 
 class BaseOrganism(Organism):
     """
@@ -309,6 +381,18 @@ class ConnectionGene:
         for attr in self.__dict__:
             setattr(c, attr, getattr(self, attr))
         return c
+
+    def from_dict(dictionary):
+        return ConnectionGene(dictionary["input_node"], dictionary["output_node"], dictionary["weight"], dictionary["enabled"], dictionary["innovation_number"])
+
+    def to_dict(self):
+        return {
+            "input_node": self.input_node,
+            "output_node": self.output_node,
+            "weight": self.weight,
+            "enabled": self.enabled,
+            "innovation_number": self.innovation_number,
+        }
     
 class CrossOverOrganism(Organism):
     def __init__(
