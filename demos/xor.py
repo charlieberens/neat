@@ -6,6 +6,10 @@ from neat.population import Population
 from neat.config import get_config
 from neat.reporter import PrintReporter
 
+"""
+Before running this, run `source ./demos/xor.config.json` to set the correct directory for module imports.
+"""
+
 def eval_xor(organism):
     """
     XOR fitness function
@@ -23,7 +27,7 @@ def main():
     p = Population(200, config)
     p.add_reporter(PrintReporter())
     w = p.run(eval_xor, 300)
-    w.draw()
+    w.draw(filename="xor.jpg")
 
 if __name__ == "__main__":
     main()

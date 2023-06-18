@@ -169,7 +169,7 @@ class Organism:
         """
         Take the graph of nodes and connections and calculate a possible set of layers
         """
-        layers = [range(self.config["input_nodes"] + 1)]
+        layers = [[i for i in range(self.config["input_nodes"] + 1)]]
         v = set(layers[0])
 
         while True:
@@ -181,7 +181,7 @@ class Organism:
             if len(t) == 0:
                 break
             v = v.union(t)
-            layers.append(t)
+            layers.append(list(t))
         return layers
 
     def get_layered_connections(self):
@@ -248,8 +248,11 @@ class Organism:
         """
             Returns a list of layers and connections which can be quickly evaluated
         """
-        pass
-            
+
+        layered_connections, layered_nodes = self.get_layered_connections()
+
+        return [[(c.input_node, c.output_node, c.weight) for c in l] for l in layered_connections], layered_nodes
+
     def evaluate(self, inputs):
         """
         Takes inputs [-1, -2, -3, ... -n] and returns outputs [0, 1, 2, ... m-1]
@@ -278,19 +281,19 @@ class Organism:
         
         return [node_values[n] for n in layered_nodes[-1]]
     
-    def draw(self, node_radius=16, line_thickness=1, node_margin_y=32, node_margin_x=64, padding=100, show=True, filename=None):
+    def draw(self, resolution_multiplier=2, node_radius=16, line_thickness=1, node_margin_y=32, node_margin_x=64, padding=100, show=True, filename=None):
         """
         Draw the network, optionally to a file
         """
         def get_positions(layer, layer_index, node_index, canvas, padding, node_radius, node_margin_x, node_margin_y, line=False, output=False):
-            y_pos = int(canvas.shape[0] // 2 + (node_index - len(layer) / 2) * (node_radius + node_margin_y)) + node_margin_y // 2
-            x_pos = padding + layer_index * (node_radius + node_margin_x) + node_radius
+            y_pos = int(canvas.shape[0] // 2 + (node_index - len(layer) / 2) * (node_radius*resolution_multiplier + node_margin_y*resolution_multiplier) ) + (node_margin_y * resolution_multiplier) // 2
+            x_pos = (padding + layer_index  * (node_radius + node_margin_x) + node_radius)*resolution_multiplier
 
             if line:
                 if output:
-                    x_pos += node_radius
+                    x_pos += node_radius*resolution_multiplier
                 else:
-                    x_pos -= node_radius
+                    x_pos -= node_radius*resolution_multiplier
 
             return x_pos, y_pos
 
@@ -298,7 +301,7 @@ class Organism:
         connections = [(c.input_node, c.output_node, c.enabled) for c in self.connections]
 
         # Create a canvas
-        canvas = np.zeros((2* padding + max([len(l) for l in layers]) * (node_radius + node_margin_y) - node_margin_y, 2* padding + (node_radius + node_margin_x) * len(layers) - node_margin_x, 3), dtype=np.uint8)
+        canvas = np.zeros(((2* padding + max([len(l) for l in layers]) * (node_radius + node_margin_y) - node_margin_y) *  resolution_multiplier, (2* padding + (node_radius + node_margin_x) * len(layers) - node_margin_x)*resolution_multiplier, 3), dtype=np.uint8)
         canvas += 255
         print(canvas.shape)
 
@@ -316,7 +319,7 @@ class Organism:
                     color = (150, 150, 150)
 
                 x_pos, y_pos = get_positions(layer, i, j, canvas, padding, node_radius, node_margin_x, node_margin_y)
-                cv2.circle(canvas, (x_pos, y_pos), node_radius, color, -1)
+                cv2.circle(canvas, (x_pos, y_pos), node_radius*resolution_multiplier, color, -1)
 
         for in_node, out_node, enabled in connections:
             if enabled:
@@ -331,7 +334,7 @@ class Organism:
                     if node == out_node:
                         x_pos2, y_pos2 = get_positions(layer, i, j, canvas, padding, node_radius, node_margin_x, node_margin_y, True, False)
             
-            cv2.line(canvas, (x_pos1, y_pos1), (x_pos2, y_pos2), color, line_thickness)
+            cv2.line(canvas, (x_pos1, y_pos1), (x_pos2, y_pos2), color, line_thickness*resolution_multiplier)
         
         # Draw to screen
         if show:
