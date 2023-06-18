@@ -25,11 +25,9 @@ class Population:
                 ID of the population. Used for saving progress, statistics, etc.
         """
         self.n = n
-        self.input_nodes = config["input_nodes"]
-        self.output_nodes = config["output_nodes"]
         self.config = config
         self.generation = 0
-        self.innovation_number = count(0)
+        self.innovation_number = count(config["input_nodes"] + config["output_nodes"] + 1)
         self.organisms = set()
         self.species = set()
         self.reporters = []
@@ -47,9 +45,6 @@ class Population:
         best = None
 
         if en_masse:
-            for i, organism in enumerate(self.organisms):
-                organism.layers = organism.calculate_layers()
-                organism.order_connections()
             fitnesses = eval_func(self.organisms)
             for i, organism in enumerate(self.organisms):
                 organism.fitness = fitnesses[i]
@@ -58,11 +53,10 @@ class Population:
                     best = organism
         else:
             for organism in self.organisms:
-                organism.layers = organism.calculate_layers()
-                organism.order_connections()
                 organism.fitness = eval_func(organism)
                 organism.adjusted_fitness = organism.fitness / len(organism.species.members)
                 if not best or organism.fitness > best.fitness:
+                # if not best or organism.node_count > best.node_count:
                     best = organism
 
         return best

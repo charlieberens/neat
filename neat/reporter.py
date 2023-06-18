@@ -33,11 +33,11 @@ class PrintReporter(Reporter):
                 self.population.best.fitness,
                 len(self.population.species),
                 len(self.population.organisms),
-                sum([len(o.nodes) for o in self.population.organisms])
+                sum([o.node_count for o in self.population.organisms])
                 / len(self.population.organisms),
                 [
-                    min([len(o.nodes) for o in self.population.organisms]),
-                    max([len(o.nodes) for o in self.population.organisms]),
+                    min([o.node_count for o in self.population.organisms]),
+                    max([o.node_count for o in self.population.organisms]),
                 ],
                 [
                     min(

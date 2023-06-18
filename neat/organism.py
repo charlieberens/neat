@@ -17,6 +17,12 @@ class Organism:
         self.innovation_number_tracker = innovation_number_tracker
         self.species = None
         self.population = population
+        self.connections = []
+        self.weights = []
+        self.node_count = 0
+        self.node_innovation_numbers = []
+        self.adjusted_fitness = None
+        self.history = []
 
     def from_file(filename: str):
         """
@@ -26,111 +32,91 @@ class Organism:
         return Organism.from_dict(organism_dict)
 
     def from_dict(organism_dict: dict):
-        id = organism_dict["meta"]["id"]
-        config = organism_dict["config"]
-        organism = Organism(id, None, config, None)
+        # id = organism_dict["meta"]["id"]
+        # config = organism_dict["config"]
+        # organism = Organism(id, None, config, None)
 
-        organism.nodes = [Node.from_dict(n, config) for n in organism_dict["nodes"]]
-        organism.connections = [
-            Connection.from_dict(c, organism, config)
-            for c in organism_dict["connections"]
-        ]
+        # organism.nodes = [Node.from_dict(n, config) for n in organism_dict["nodes"]]
+        # organism.connections = [
+        #     Connection.from_dict(c, organism, config)
+        #     for c in organism_dict["connections"]
+        # ]
+        return
         return organism
 
-    def copy(self, organism_id: str):
+    def __copy__(self):
         """
         Copy the organism
         """
-        new_organism = Organism(
-            organism_id, self.innovation_number_tracker, self.config, self.population
-        )
-        new_organism.nodes = [n.copy() for n in self.nodes]
-        new_organism.connections = [c.copy(new_organism) for c in self.connections]
-        return new_organism
+        o = Organism(self.id, self.innovation_number_tracker, self.config, None)
+        # Copy all attributes
+        o.connections = deepcopy(self.connections)
+        o.node_count = self.node_count
+        o.node_innovation_numbers = self.node_innovation_numbers[:]
+        o.history = self.history[:]
+        return o
 
-    def create_node(self):
-        """
-        Add a node to the organism
-        """
-        a = len(self.connections)
-        split_connection = random.choice([c for c in self.connections if c.enabled])
-        split_connection.enabled = False
-        new_node = Node(0, len(self.nodes), self.config)
-        self.nodes.append(new_node)
-        connection_1 = Connection(
-            self,
-            split_connection.in_node.index,
-            new_node.index,
-            1,
-            self.innovation_number_tracker(
-                (split_connection.in_node.index, new_node.index)
-            ),
-            self.config,
-        )
-        connection_2 = Connection(
-            self,
-            new_node.index,
-            split_connection.out_node.index,
-            split_connection.weight,
-            self.innovation_number_tracker(
-                (
-                    new_node.index,
-                    split_connection.out_node.index,
-                )
-            ),
-            self.config,
-        )
-        self.connections.append(connection_1)
-        self.connections.append(connection_2)
-
-    def create_connection(self):
+    def create_connection(self, input_node, output_node, enabled, weight=None):
         """
         Add a connection to the network
         """
-        # Select two random nodes
-        in_node = random.choice(self.nodes)
-        out_node = random.choice(self.nodes)
+        if weight is None:
+            weight = random.uniform(self.config["weight_min_value"], self.config["weight_max_value"])
 
-        # Check if the out_node is an input_node
-        if out_node.index < self.config["input_nodes"]:
+        c = ConnectionGene(input_node, output_node, weight, enabled, self.innovation_number_tracker((self.node_innovation_numbers[input_node], self.node_innovation_numbers[output_node])))
+        self.connections.append(c)
+
+    def mut_create_node(self):
+        """
+        Splits a connection thus creating a new node.
+        The original connection is disabled and two new connections are created.
+        The first connection has the same weight as the original connection.
+        The second connection has a weight of 1.
+        """
+        split_connection = random.choice(self.connections)
+        split_connection.enabled = False
+
+        # TODO - Handle innovation numbers 
+        self.node_count += 1
+        self.node_innovation_numbers.append(self.innovation_number_tracker((split_connection.input_node, split_connection.output_node), node=True))
+
+        self.create_connection(
+            split_connection.input_node,
+            self.node_count - 1,
+            True,
+            split_connection.weight),
+        self.create_connection(
+            self.node_count - 1,
+            split_connection.output_node,
+            True,
+            1),
+
+        self.history.append(self.node_count - 1)
+            
+    def mut_create_connection(self):
+        """
+        Create a new connection between two nodes
+        """
+        # TODO - Handle innovation numbers
+        input_node = random.choice(range(self.node_count - 1))
+        output_node = random.choice(range(self.node_count - 1))
+
+        if input_node == output_node:
+            return
+        
+        if output_node in range(self.config["input_nodes"]+1) or input_node in range(self.config["input_nodes"]+1,self.config["input_nodes"]+self.config["output_nodes"]+1):
             return
 
-        # Check if the connection starts with an output node
-        if in_node.index in range(
-            self.config["input_nodes"],
-            self.config["input_nodes"] + self.config["output_nodes"],
-        ):
-            return
-
-        # Check if the connection already exists
-        for connection in self.connections:
-            if connection.in_node == in_node and connection.out_node == out_node:
+        # Check if connection already exists
+        for c in self.connections:
+            if c.input_node == input_node and c.output_node == output_node:
                 return
 
-        # Check if the connection creates a cycle
-        if self.creates_cycle(
-            Connection(self, in_node.index, out_node.index, 1, 0, self.config)
-        ):
+        # Check if connection creates a cycle
+        if self.creates_cycle(input_node, output_node):
             return
-
-        # Create the connection
-        self.connections.append(
-            Connection(
-                self,
-                in_node.index,
-                out_node.index,
-                random.uniform(
-                    self.config["weight_min_value"], self.config["weight_max_value"]
-                ),
-                self.innovation_number_tracker(
-                    (
-                        in_node.index,
-                        out_node.index,
-                    )
-                ),
-                self.config,
-            )
-        )
+        
+        self.create_connection(input_node, output_node, True)
 
     def mutate(self):
         """
@@ -138,110 +124,93 @@ class Organism:
         """
         # Mutate weights
         if random.random() < self.config["weight_mut_rate"]:
-            connection = random.choice(self.connections)
+            c = random.choice(self.connections)
             if random.random() < self.config["weight_perturb_rate"]:
-                connection.perturb_weight()
+                c.weight += random.uniform(-self.config["weight_perturb_amount"], self.config["weight_perturb_amount"])
+                c.weight = clamp(c.weight, self.config["weight_min_value"], self.config["weight_max_value"])
             else:
-                connection.randomize_weight()
-        # Mutate biases
-        if random.random() < self.config["bias_mut_rate"]:
-            node = random.choice(self.nodes)
-            if random.random() < self.config["weight_perturb_rate"]:
-                node.perturb_bias()
-            else:
-                node.randomize_bias()
+                c.weight = random.uniform(self.config["weight_min_value"], self.config["weight_max_value"])
+
         # Mutate nodes
         if self.config["single_structural_mutation"]:
             r = random.random()
             if r < self.config["node_mut_rate"]:
-                self.create_node()
+                self.mut_create_node()
             elif r < self.config["node_mut_rate"] + self.config["connection_mut_rate"]:
-                self.create_connection()
+                self.mut_create_connection()
         else:
             if random.random() < self.config["node_mut_rate"]:
-                self.create_node()
+                self.mut_create_node()
             if random.random() < self.config["connection_mut_rate"]:
-                self.create_connection()
+                self.mut_create_connection()
 
         if random.random() < self.config["enable_mut_rate"]:
-            connection = random.choice(self.connections)
-            connection.enabled = True
+            c = random.choice(self.connections)
+            c.enabled = not c.enabled
 
     def get_input_layer(self):
         """
         Return the input layer
         """
-        return self.nodes[0 : self.config["input_nodes"]]
+        pass
 
-    def creates_cycle(self, test_connection):
+    def creates_cycle(self, input_node, output_node):
         """
         Check if the connection creates a cycle
         """
-        if test_connection.in_node == test_connection.out_node:
-            return True
+        v = set([output_node])
 
-        visited = set()
-        visited.add(test_connection.out_node)
         while True:
-            num_added = 0
-            for connection in self.connections:
-                if connection.in_node in visited and connection.out_node not in visited:
-                    if connection.out_node == test_connection.in_node:
+            t = set()
+            for c in self.connections:
+                if c.input_node in v and c.output_node not in v:
+                    if c.output_node == input_node:
                         return True
-                    visited.add(connection.out_node)
-                    num_added += 1
-                    break
+                    t.add(c.output_node)
 
-            if num_added == 0:
-                # No new nodes were added this cycle
-                return False
+            if len(t) == 0:
+                break                
+            v = v.union(t)
+
+        return False
+        
 
     def calculate_layers(self):
         """
         Take the graph of nodes and connections and calculate a possible set of layers
         """
+        layers = [range(self.config["input_nodes"] + 1)]
+        v = set(layers[0])
 
-        nodes = self.get_input_layer()
-        s = set(nodes)
-        # print("s", s)
         while True:
-            # Get all next nodes
-            c = (
-                set(
-                    [
-                        c.out_node
-                        for c in self.connections
-                        if c.in_node in s 
-                    ]
-                )
-                - s
-            )
-
-            # Keep only the nodes that have all their inputs in s
             t = set()
-            for node in c:
-                if all(
-                    c.in_node in s
-                    for c in self.connections
-                    if c.out_node == node
-                ):
-                    t.add(node)
-
-            if not t:
+            for c in self.connections:
+                if c.output_node not in v:
+                    if all([i in v for i in [con.input_node for con in self.connections if con.output_node == c.output_node]]):
+                        t.add(c.output_node)
+            if len(t) == 0:
                 break
+            v = v.union(t)
+            layers.append(t)
+        return layers
 
-            s = s.union(t)
-            nodes.append(list(t))
-        return nodes
-    
-    def order_connections(self):
+    def get_layered_connections(self):
         """
         Order the connections in the network based on node order
         """
-        # This is absurdly inefficient, but do I care? No!
+        node_layers = self.calculate_layers()
+        connection_layers = []
+        unused_connections = set(self.connections)
 
-        # self.connections.sort(key=lambda x: self.layers.index(x.in_node))
-        pass
+        for l in node_layers:
+            layer_connections = []
+            for c in unused_connections:
+                if c.input_node in l:
+                    layer_connections.append(c)
+            unused_connections = unused_connections.difference(set(layer_connections))
+            connection_layers.append(layer_connections)
+
+        return connection_layers, node_layers
 
     def to_file(self, filename=None):
         """
@@ -264,140 +233,83 @@ class Organism:
             pickle.dump(organism_dictionary, file)
 
     def to_dict(self):
-        nodes = [{"bias": n.bias, "index": n.index} for n in self.nodes]
-        connections = [
-            {
-                "weight": c.weight,
-                "enabled": c.enabled,
-                "in_node_number": c.in_node_number,
-                "out_node_number": c.out_node_number,
-                "innovation_number": c.innovation_number,
-            }
-            for c in self.connections
-        ]
-        meta = {"id": self.id}
-        return {"nodes": nodes, "connections": connections, "meta": meta}
+        pass
 
     def get_network_structure(self):
         """
             Returns a list of layers and connections which can be quickly evaluated
         """
-        #  Ensure that the last layer is the output layer
-        layers = [
-            node.bias for node in self.layers if node not in self.nodes[self.config["input_nodes"]:self.config["input_nodes"]+self.config["output_nodes"]]
-        ] + [node.bias for node in self.nodes[self.config["input_nodes"]:self.config["input_nodes"]+self.config["output_nodes"]]]
-        connection_pairs = []
-        connection_weights = []
-        for connection in self.connections:
-            if connection.enabled:
-                # find the layer of the in_node
-                in_node = 0
-                out_node = 0
-
-                for i,node in enumerate(self.layers):
-                    if connection.in_node == node:
-                        in_node = i
-                    if connection.out_node == node:
-                        out_node = i
-
-                connection_pairs.append((in_node, out_node))
-                connection_weights.append(connection.weight)
-        return layers, connection_pairs, connection_weights
-        
-    def evaluate(self, inputs, calculate_layers=False):
+        pass
+            
+    def evaluate(self, inputs):
         """
         Takes inputs [-1, -2, -3, ... -n] and returns outputs [0, 1, 2, ... m-1]
         Where n is the number of input nodes and m is the number of output nodes
         """
-
-        if calculate_layers:
-            self.layers = self.calculate_layers()
-            self.order_connections()
-
         if len(inputs) != self.config["input_nodes"]:
-            raise ValueError("Expected {} inputs, got {}".format(self.config["input_nodes"], len(inputs)))
-        for i, layer in enumerate(self.layers[0]):
-            for node in layer:
-                if i == 0:
-                    node.value = inputs[i] + node.bias
-                else:
-                    node.value = node.bias
-        for connection in self.connections:
-            if connection.enabled:
-                connection.out_node.value += (
-                    self.config["transfer_function"](connection.in_node.value)
-                    * connection.weight
-                )
+            raise ValueError("Incorrect number of inputs")
 
-        output = [
-            self.config["transfer_function"](output_node.value)
-            for output_node in self.nodes[
-                self.config["input_nodes"] : self.config["input_nodes"]
-                + self.config["output_nodes"]
-            ]
-        ]
+        node_values = [0] * self.node_count
+        node_values[:self.config["input_nodes"]] = inputs
+        node_values[self.config["input_nodes"]] = 1        
 
-        return output
+        layered_connections, layered_nodes = self.get_layered_connections()
+
+        for connection_layer, node_layer in zip(layered_connections, layered_nodes):
+            for n in node_layer:
+                node_values[n] = self.config["transfer_function"](node_values[n])
+            for c in connection_layer:
+                if c.enabled:
+                    try:
+                        node_values[c.output_node] += node_values[c.input_node] * c.weight
+                    except IndexError:
+                        print(self.node_count, [(c.input_node, c.output_node) for c in self.connections])
+                        print(self.history)
+                        raise IndexError("Index error in evaluate")
+        
+        return [node_values[n] for n in layered_nodes[-1]]
+                
+
+
 
 
 class BaseOrganism(Organism):
     """
-    self.nodes is an array of nodes
     """
 
     def __init__(
         self, organism_id: str, innovation_number_tracker, config: dict, population
     ):
         super().__init__(organism_id, innovation_number_tracker, config, population)
-        node_count = count(0)
-        self.nodes = [
-            InputNode(
-                -1 - i,
-                next(node_count),
-                random.uniform(
-                    self.config["bias_min_value"], self.config["bias_max_value"]
-                ),
-                config,
-            )
-            for i in range(self.config["input_nodes"])
-        ] + [
-            OutputNode(
-                i,
-                next(node_count),
-                random.uniform(
-                    self.config["bias_min_value"], self.config["bias_max_value"]
-                ),
-                config,
-            )
-            for i in range(self.config["output_nodes"])
-        ]
+        # We include one extra node for the bias node
+        self.node_innovation_numbers = [i for i in range(self.config["input_nodes"] + self.config["output_nodes"] + 1)]
 
-        self.connections = []
+        for i in range(self.config["input_nodes"] + 1):
+            for j in range(self.config["output_nodes"]):
+                self.create_connection(i, j + self.config["input_nodes"] + 1, True)
+        
+        self.node_count = self.config["input_nodes"] + self.config["output_nodes"] + 1
 
-        for input_node_index in range(self.config["input_nodes"]):
-            for output_node_index in range(
-                self.config["input_nodes"],
-                self.config["output_nodes"] + self.config["input_nodes"],
-            ):
-                self.connections.append(
-                    Connection(
-                        self,
-                        input_node_index,
-                        output_node_index,
-                        random.uniform(
-                            config["weight_min_value"], config["weight_max_value"]
-                        ),
-                        self.innovation_number_tracker(
-                            (
-                                input_node_index,
-                                output_node_index,
-                            )
-                        ),
-                        config,
-                    )
-                )
+class ConnectionGene:
+    def __init__(self, input_node: int, output_node: int, weight: float, enabled: bool, innovation_number:int):
+        self.input_node = input_node
+        self.output_node = output_node
+        self.weight = weight
+        self.enabled = enabled
+        self.innovation_number = innovation_number
 
-
+    def __copy__(self):
+        c = ConnectionGene(
+            self.input_node,
+            self.output_node,
+            self.weight,
+            self.enabled,
+            self.innovation_number,
+        )
+        for attr in self.__dict__:
+            setattr(c, attr, getattr(self, attr))
+        return c
+    
 class CrossOverOrganism(Organism):
     def __init__(
         self,
@@ -426,6 +338,7 @@ class CrossOverOrganism(Organism):
         a_excess = []
         b_excess = []
 
+        # Calculate disjoint and excess genes
         while True:
             if i > len(self.parent1.connections) - 1:
                 b_excess = self.parent2.connections[j:]
@@ -450,132 +363,37 @@ class CrossOverOrganism(Organism):
                     b_disjoint.append(b_gene)
                     j += 1
 
-        # TODO - Mutate Bias
         if self.parent1.fitness > self.parent2.fitness:
-            self.nodes = [n.copy() for n in self.parent1.nodes]
+            self.node_count = self.parent1.node_count
+            self.node_innovation_numbers = self.parent1.node_innovation_numbers[:]
+
+
         else:
-            self.nodes = [n.copy() for n in self.parent2.nodes]
+            self.node_count = self.parent2.node_count
+            self.node_innovation_numbers = self.parent2.node_innovation_numbers[:]
 
         for a_gene, b_gene in zip(a_shared, b_shared):
             if random.random() < 0.5:
-                new_a_gene = a_gene.copy(self)
-                new_a_gene.enabled = b_gene.enabled or a_gene.enabled
-                self.connections.append(new_a_gene)
+                new_gene = a_gene.__copy__()
             else:
-                new_b_gene = b_gene.copy(self)
-                new_b_gene.enabled = a_gene.enabled or b_gene.enabled
-                self.connections.append(new_b_gene)
+                new_gene = b_gene.__copy__()
+            new_gene.enabled = b_gene.enabled or a_gene.enabled
+            new_gene.input_node, new_gene.output_node = (a_gene.input_node, a_gene.output_node) if self.parent1.fitness > self.parent2.fitness else (b_gene.input_node, b_gene.output_node)
+            self.connections.append(new_gene)
 
         if self.parent1.fitness > self.parent2.fitness:
-            self.connections += [gene.copy(self) for gene in a_disjoint]
-            self.connections += [gene.copy(self) for gene in a_excess]
+            self.connections += [gene.__copy__() for gene in a_disjoint]
+            self.connections += [gene.__copy__() for gene in a_excess]
         else:
-            self.connections += [gene.copy(self) for gene in b_disjoint]
-            self.connections += [gene.copy(self) for gene in b_excess]
+            self.connections += [gene.__copy__() for gene in b_disjoint]
+            self.connections += [gene.__copy__() for gene in b_excess]
 
+        b = max([c.output_node for c in self.connections])
+        if b >= self.node_count:
+            print("ZOINKS")
+            print([(c.input_node, c.output_node) for c in self.connections])
+            print([(c.input_node, c.output_node) for c in self.parent1.connections])
+            print([(c.input_node, c.output_node) for c in self.parent2.connections])
+            print(self.parent1.node_count, self.parent2.node_count)
 
-class Node:
-    def __init__(self, bias: float, index: int, config: dict):
-        self.bias: float = bias
-        self.value: float = self.bias
-        self.config: dict = config
-        self.index: int = index
-
-    def from_dict(dictionary, config):
-        """
-        Creates a node from a dictionary
-        """
-        return Node(
-            dictionary["bias"],
-            dictionary["index"],
-            config,
-        )
-
-    def perturb_bias(self):
-        self.bias += random.uniform(
-            -self.config["bias_perturb_amount"], self.config["bias_perturb_amount"]
-        )
-        self.bias = clamp(
-            self.bias, self.config["bias_min_value"], self.config["bias_max_value"]
-        )
-
-    def randomize_bias(self):
-        self.bias = random.uniform(
-            self.config["bias_min_value"], self.config["bias_max_value"]
-        )
-
-    def copy(self):
-        return Node(self.bias, self.index, self.config)
-
-
-class InputNode(Node):
-    def __init__(self, pin_index: int, index: int, bias: float, config: dict):
-        self.pin_index = pin_index
-        super().__init__(bias, index, config)
-
-
-class OutputNode(Node):
-    def __init__(self, pin_index: int, index: int, bias: float, config: dict):
-        self.pin_index = pin_index
-        super().__init__(bias, index, config)
-
-
-class Connection:
-    def __init__(
-        self,
-        organism: Organism,
-        in_node: int,
-        out_node: int,
-        weight: float,
-        innovation_number: int,
-        config: dict,
-        enabled: bool = True,
-    ):
-        self.in_node_number: int = in_node
-        self.out_node_number: int = out_node
-        self.in_node: Node = organism.nodes[in_node]
-        self.out_node: Node = organism.nodes[out_node]
-        self.weight: float = weight
-        self.enabled: bool = enabled
-        self.innovation_number: int = innovation_number
-        self.config: dict = config
-
-    def from_dict(dictionary, organism: Organism, config):
-        """
-        Creates a connection from a dictionary
-        """
-        return Connection(
-            organism,
-            dictionary["in_node_number"],
-            dictionary["out_node_number"],
-            dictionary["weight"],
-            dictionary["innovation_number"],
-            config,
-            dictionary["enabled"],
-        )
-
-    def copy(self, new_organism: Organism):
-        return Connection(
-            new_organism,
-            self.in_node_number,
-            self.out_node_number,
-            self.weight,
-            self.innovation_number,
-            self.config,
-            self.enabled,
-        )
-
-    def perturb_weight(self):
-        self.weight += random.uniform(
-            -self.config["weight_perturb_amount"], self.config["weight_perturb_amount"]
-        )
-        self.weight = clamp(
-            self.weight,
-            self.config["weight_min_value"],
-            self.config["weight_max_value"],
-        )
-
-    def randomize_weight(self):
-        self.weight = random.uniform(
-            self.config["weight_min_value"], self.config["weight_max_value"]
-        )
+            print(self.parent1.fitness, self.parent2.fitness)

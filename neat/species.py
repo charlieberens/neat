@@ -1,4 +1,4 @@
-from neat.organism import Organism, Connection
+from neat.organism import Organism
 
 
 class Species:

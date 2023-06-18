@@ -6,3 +6,6 @@ organisms
 dist
 *.egg-info
 config.json
+test.py
+test.config.json
+```

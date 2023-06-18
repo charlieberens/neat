@@ -3,12 +3,7 @@ import random
 import time
 from neat.organism import (
     CrossOverOrganism,
-    Organism,
     BaseOrganism,
-    InputNode,
-    OutputNode,
-    Connection,
-    Node,
 )
 from itertools import count
 from neat.species import Species
@@ -21,17 +16,25 @@ class Reproducer:
         self.generation_organism_number = count(0)
         self.innovation_number_counter = innovation_number_counter
         self.species_number = count(0)
-        self.species: Species = set()
+        # self.species: Species = set()
         self.generation_innovations = {}
 
-        def innovation_number_tracker(innovation):
-            if innovation in self.generation_innovations.keys():
-                return self.generation_innovations[innovation]
+        def innovation_number_tracker(innovation, node=False):
+            # For new nodes, innovation is a tuple of the innovation numbers of the endpoints of the connection that was split
+            # For new connections, innovation is a tuple of the innovation numbers of the endpoints of the new connection
+            if node:
+                if ("n", innovation) not in self.generation_innovations.keys():
+                    self.generation_innovations[("n", innovation)] = next(
+                        self.innovation_number_counter
+                    )
+                return self.generation_innovations[("n", innovation)]
+
             else:
-                self.generation_innovations[innovation] = next(
-                    self.innovation_number_counter
-                )
-                return self.generation_innovations[innovation]
+                if ("c", innovation) not in self.generation_innovations.keys():
+                    self.generation_innovations[("c", innovation)] = next(
+                        self.innovation_number_counter
+                    )
+                return self.generation_innovations[("c", innovation)]
 
         self.generation_innovation_number_tracker = innovation_number_tracker
 
@@ -39,11 +42,11 @@ class Reproducer:
         """
         Create a new organism from a single parent
         """
-        new_organism = organism.copy(
-            "{}-{:02X}".format(
+        new_organism = organism.__copy__()
+        new_organism.id = "{}-{:02X}".format(
                 self.population.generation, next(self.generation_organism_number)
             )
-        )
+
         # Mutate the new organism
         new_organism.mutate()
         return new_organism
@@ -171,12 +174,12 @@ class Reproducer:
             )
 
     def reproduce(self):
+        o_sorted = sorted(self.population.organisms, key=lambda o: o.fitness)[int(self.config["elimination_threshold"]*self.population.n):]
+
+    def reproduce(self):
         """
         Reproduce the current generation
         """
-
-        test = self.population.organisms.pop()
-
         self.generation_organism_number = count(0)
         self.population.organisms = set()
 
@@ -184,10 +187,13 @@ class Reproducer:
 
         for species in self.population.species:
             species.age += 1
+
             # Remove the worst performing organisms
             members = sorted(list(species.members), key=lambda o: o.adjusted_fitness)
             if len(members) > 5:
                 self.population.organisms.add(members[-1])
+
+            # Reproduce the rest
             for i in range(species.allocation - 1):
                 if random.random() < self.config["interspecies_mating_rate"]:
                     species2 = random.choice(list(self.population.species))
@@ -206,15 +212,5 @@ class Reproducer:
                     else:
                         parent = random.choice(members)
                         self.population.organisms.add(self.asexual_reproduction(parent))
-
-        # for i in range(self.population.n):
-        #     species = random.choice(list(self.population.species))
-        #     parent = random.choice(list(species.members))
-        #     self.population.organisms.add(self.asexual_reproduction(parent))
-
-        # Reset the organisms
-        for organism in self.population.organisms:
-            for node in organism.nodes:
-                node.value = node.bias
 
         self.speciate()
