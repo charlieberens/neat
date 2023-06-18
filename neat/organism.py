@@ -246,12 +246,12 @@ class Organism:
 
     def get_network_structure(self):
         """
-            Returns a list of layers and connections which can be quickly evaluated
+            Returns a list of layers and enabled connections which can be quickly evaluated
         """
 
         layered_connections, layered_nodes = self.get_layered_connections()
 
-        return [[(c.input_node, c.output_node, c.weight) for c in l] for l in layered_connections], layered_nodes
+        return [[(c.input_node, c.output_node, c.weight) for c in l if c.enabled] for l in layered_connections], layered_nodes
 
     def evaluate(self, inputs):
         """
