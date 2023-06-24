@@ -181,7 +181,7 @@ class Organism:
                 break
             v = v.union(t)
             layers.append(list(t))
-        return layers
+        return [sorted(l) for l in layers]
 
     def get_layered_connections(self):
         """
