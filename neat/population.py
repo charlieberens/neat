@@ -45,8 +45,9 @@ class Population:
         best = None
 
         if en_masse:
-            fitnesses = eval_func(self.organisms)
-            for i, organism in enumerate(self.organisms):
+            organism_list = list(self.organisms)
+            fitnesses = eval_func(organism_list)
+            for i, organism in enumerate(organism_list):
                 organism.fitness = fitnesses[i]
                 organism.adjusted_fitness = organism.fitness / len(organism.species.members)
                 if not best or organism.fitness > best.fitness:
