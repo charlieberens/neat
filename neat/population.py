@@ -2,10 +2,11 @@ import random
 import string
 import time
 from neat.activations import sigmoid
-from neat.organism import Organism, BaseOrganism
+from neat.organism import Organism
+from neat.species import Species
 from neat.reproduction import Reproducer
 from itertools import count
-
+import pickle
 
 class Population:
     def __init__(
@@ -32,6 +33,7 @@ class Population:
         self.species = set()
         self.reporters = []
         self.id = id
+        self.create_initial_generation()
 
     def add_reporter(self, *reporters):
         for reporter in reporters:
@@ -62,12 +64,15 @@ class Population:
 
         return best
 
+    def create_initial_generation(self):
+        self.reproducer = Reproducer(self, self.innovation_number)
+        self.reproducer.create_initial_generation()
+
+
     def run(self, eval_func, generations, en_masse=False) -> Organism:
         """
         Run the population for a number of generations
         """
-        reproducer = Reproducer(self, self.innovation_number)
-        reproducer.create_initial_generation()
 
         for i in range(generations):
             self.best = self.evaluate_generation(eval_func, en_masse)
@@ -78,7 +83,7 @@ class Population:
             if self.config["goal_fitness"] != None:
                 if self.best.fitness >= self.config["goal_fitness"]:
                     return self.end_training(self.best)
-            reproducer.reproduce()
+            self.reproducer.reproduce()
             self.generation += 1
 
         return self.end_training(self.best)
@@ -87,3 +92,50 @@ class Population:
         for reporter in self.reporters:
             reporter.complete()
         return return_value
+    
+    def to_dict(self):
+        dictionary = {
+            "meta": {
+                "config": self.config,
+                "id": self.id
+            },
+            "species": [species.to_dict() for species in self.species],
+            "organisms": [organism.to_dict() for organism in self.organisms],
+            "n": self.n,
+            "generation": self.generation,
+            "innovation_number": next(self.innovation_number),
+        }
+        return dictionary
+
+    def to_file(self, path):
+        dictionary = self.to_dict()
+        with open(path, "wb") as f:
+            pickle.dump(dictionary, f)
+        
+        print(f"Saved population to {path}")
+            
+    @staticmethod
+    def from_dict(dictionary):
+        """
+        Load a population from a dictionary. Note: this will not load the reporters.
+        """
+        population = Population(dictionary["n"], dictionary["meta"]["config"], dictionary["meta"]["id"])
+        population.generation = dictionary["generation"]
+        population.innovation_number = count(dictionary["innovation_number"])
+        population.organisms = {Organism.from_dict(organism) for organism in dictionary["organisms"]}
+        population.species = {Species.from_dict(species, population.config, population.organisms) for species in dictionary["species"]}
+        population.reproducer = Reproducer(population, population.innovation_number)
+
+        return population
+    
+    @staticmethod
+    def from_file(path: str):
+        """
+        Load a population from a file. Note: this will not load the reporters.
+        """
+        with open(path, "rb") as f:
+            dictionary = pickle.load(f)
+        return Population.from_dict(dictionary)
+
+
+        

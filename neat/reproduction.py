@@ -174,9 +174,6 @@ class Reproducer:
             )
 
     def reproduce(self):
-        o_sorted = sorted(self.population.organisms, key=lambda o: o.fitness)[int(self.config["elimination_threshold"]*self.population.n):]
-
-    def reproduce(self):
         """
         Reproduce the current generation
         """

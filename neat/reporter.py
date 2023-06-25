@@ -132,16 +132,21 @@ class StatReporter:
 
 class ProgressReporter:
     """
-    The Progress Reporter saves the best organism from each generation (or generation and species) to a csv.
+    The Progress Reporter saves the population to a pickle file every frequency generations.
     """
 
-    def __init__(self, filename: str, by_species: bool = False, frequency: int = 1):
+    def __init__(self, by_species: bool = False, frequency: int = 1):
         # TODO - Implement by_species
-        self.filename = filename
+        self.population = None
         self.by_species = by_species
         self.frequency = frequency
-        self.population = None
         self.rows = []
 
-    def report(self):
-        pass
+    def report(self, force=False):
+        if self.population.generation % self.frequency == 0 or force:
+            if not os.path.exists(self.population.config["progress_directory"]):
+                os.makedirs(self.population.config["progress_directory"])
+            self.population.to_file(os.path.join(self.population.config["progress_directory"],"{}-{}".format(self.population.id, self.population.generation)))
+
+    def complete(self):
+        self.report(force = True)

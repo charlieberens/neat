@@ -26,6 +26,7 @@ class Organism:
         self.adjusted_fitness = None
         self.history = []
 
+    @staticmethod
     def from_file(filename: str):
         """
         Load an organism from a file
@@ -230,6 +231,7 @@ class Organism:
             },
             "config": self.config,
             "connections": [c.to_dict() for c in self.connections],
+            "node_innovation_numbers": self.node_innovation_numbers,
         }
         return dictionary
 
@@ -238,6 +240,7 @@ class Organism:
         config = organism_dict["config"]
         organism = Organism(id, None, config, None)
         organism.node_count = organism_dict["meta"]["node_count"]
+        organism.node_innovation_numbers = organism_dict["node_innovation_numbers"]
 
         organism.connections = [
             ConnectionGene.from_dict(c)
