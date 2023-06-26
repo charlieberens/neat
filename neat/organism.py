@@ -246,7 +246,7 @@ class Organism:
         if population:
             organism.innovation_number_tracker = population.reproducer.generation_innovation_number_tracker
             if organism_dict["species"] != None:
-                organism.species = population.species[organism_dict["species"]]
+                organism.species = [s for s in population.species if s.species_number == organism_dict["species"]][0]
             else:
                 organism.species = None
 
