@@ -232,18 +232,23 @@ class Organism:
             "config": self.config,
             "connections": [c.to_dict() for c in self.connections],
             "node_innovation_numbers": self.node_innovation_numbers,
+            "species": self.species.species_number if self.species else None,
         }
         return dictionary
 
-    def from_dict(organism_dict: dict, innovation_number_tracker: any = None):
+    def from_dict(organism_dict: dict, population: any = None):
         id = organism_dict["meta"]["id"]
         config = organism_dict["config"]
         organism = Organism(id, None, config, None)
         organism.node_count = organism_dict["meta"]["node_count"]
         organism.node_innovation_numbers = organism_dict["node_innovation_numbers"]
 
-        if innovation_number_tracker:
-            organism.innovation_number_tracker = innovation_number_tracker
+        if population:
+            organism.innovation_number_tracker = population.reproducer.generation_innovation_number_tracker
+            if organism_dict["species"] != None:
+                organism.species = population.species[organism_dict["species"]]
+            else:
+                organism.species = None
 
         organism.connections = [
             ConnectionGene.from_dict(c)
