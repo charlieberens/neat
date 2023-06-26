@@ -235,12 +235,15 @@ class Organism:
         }
         return dictionary
 
-    def from_dict(organism_dict: dict):
+    def from_dict(organism_dict: dict, innovation_number_tracker: any = None):
         id = organism_dict["meta"]["id"]
         config = organism_dict["config"]
         organism = Organism(id, None, config, None)
         organism.node_count = organism_dict["meta"]["node_count"]
         organism.node_innovation_numbers = organism_dict["node_innovation_numbers"]
+
+        if innovation_number_tracker:
+            organism.innovation_number_tracker = innovation_number_tracker
 
         organism.connections = [
             ConnectionGene.from_dict(c)

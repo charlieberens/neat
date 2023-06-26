@@ -122,9 +122,9 @@ class Population:
         population = Population(dictionary["n"], dictionary["meta"]["config"], dictionary["meta"]["id"])
         population.generation = dictionary["generation"]
         population.innovation_number = count(dictionary["innovation_number"])
-        population.organisms = {Organism.from_dict(organism) for organism in dictionary["organisms"]}
         population.species = {Species.from_dict(species, population.config, population.organisms) for species in dictionary["species"]}
         population.reproducer = Reproducer(population, population.innovation_number)
+        population.organisms = {Organism.from_dict(organism, innovation_number_tracker=population.reproducer.generation_innovation_number_tracker) for organism in dictionary["organisms"]}
 
         return population
     
