@@ -10,6 +10,7 @@ class Species:
         self.age = 0
         self.best_fitness = -10000
         self.best_fitness_age = 0
+        self.total_adjusted_fitness = 0
 
     @staticmethod
     def from_dict(species_dict, config, organisms):
@@ -17,8 +18,9 @@ class Species:
         species.age = species_dict["age"]
         species.best_fitness = species_dict["best_fitness"]
         species.best_fitness_age = species_dict["best_fitness_age"]
-        # This is horrible, but it works and I'm tired
+        species.total_adjusted_fitness = species_dict["total_adjusted_fitness"]
         species.members = set()
+
         for organism in organisms:
             if organism.id in species_dict["members"]:
                 species.add_organism(organism)
@@ -29,10 +31,11 @@ class Species:
         return {
             "species_number": self.species_number,
             "age": self.age,
-            "members": [m.id for m in self.members],
             "representative": self.representative.to_dict(),
             "best_fitness": self.best_fitness,
             "best_fitness_age": self.best_fitness_age,
+            "total_adjusted_fitness": self.total_adjusted_fitness,
+            "members": [member.id for member in self.members],
         }
 
     def add_organism(self, organism):

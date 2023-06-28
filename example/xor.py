@@ -26,8 +26,8 @@ def main():
     config = get_config("example/xor.config.json")
     p = Population(200, config)
     p.add_reporter(PrintReporter())
-    p.add_reporter(ProgressReporter(frequency=5))
-    w = p.run(eval_xor, 250)
+    p.add_reporter(ProgressReporter(frequency=50))
+    w = p.run(eval_xor, 300)
     w.draw()
 
 if __name__ == "__main__":

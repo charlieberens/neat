@@ -76,15 +76,15 @@ class Population:
 
         for i in range(generations):
             self.best = self.evaluate_generation(eval_func, en_masse)
-
-            if self.config["goal_fitness"] != None:
-                if self.best.fitness >= self.config["goal_fitness"]:
-                    return self.end_training(self.best)
             self.reproducer.reproduce()
 
             for reporter in self.reporters:
                 reporter.report()
 
+            if self.config["goal_fitness"] != None:
+                if self.best.fitness >= self.config["goal_fitness"]:
+                    return self.end_training(self.best)
+                
             self.generation += 1
 
         return self.end_training(self.best)
@@ -123,9 +123,9 @@ class Population:
         population = Population(dictionary["n"], dictionary["meta"]["config"], dictionary["meta"]["id"])
         population.generation = dictionary["generation"]
         population.innovation_number = count(dictionary["innovation_number"])
+        population.organisms = {Organism.from_dict(organism, population=population) for organism in dictionary["organisms"]}
         population.species = {Species.from_dict(species, population.config, population.organisms) for species in dictionary["species"]}
         population.reproducer = Reproducer(population, population.innovation_number)
-        population.organisms = {Organism.from_dict(organism, population=population) for organism in dictionary["organisms"]}
 
         return population
     

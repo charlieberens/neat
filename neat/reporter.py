@@ -150,4 +150,3 @@ class ProgressReporter:
 
     def complete(self):
         self.report(force = True)
-        # pass
