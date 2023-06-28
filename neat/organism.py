@@ -240,6 +240,8 @@ class Organism:
     def from_dict(organism_dict: dict, population: any = None):
         id = organism_dict["meta"]["id"]
         config = organism_dict["config"]
+        if population:
+            config = population.config
         organism = Organism(id, None, config, None)
         organism.node_count = organism_dict["meta"]["node_count"]
         organism.node_innovation_numbers = organism_dict["node_innovation_numbers"]

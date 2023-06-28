@@ -116,11 +116,13 @@ class Population:
         print(f"Saved population to {path}")
             
     @staticmethod
-    def from_dict(dictionary):
+    def from_dict(dictionary, config=None):
         """
         Load a population from a dictionary. Note: this will not load the reporters.
         """
-        population = Population(dictionary["n"], dictionary["meta"]["config"], dictionary["meta"]["id"])
+
+        config = config or dictionary["meta"]["config"]
+        population = Population(dictionary["n"], config, dictionary["meta"]["id"])
         population.generation = dictionary["generation"]
         population.innovation_number = count(dictionary["innovation_number"])
         population.organisms = {Organism.from_dict(organism, population=population) for organism in dictionary["organisms"]}
@@ -130,13 +132,13 @@ class Population:
         return population
     
     @staticmethod
-    def from_file(path: str):
+    def from_file(path: str, config = None):
         """
         Load a population from a file. Note: this will not load the reporters.
         """
         with open(path, "rb") as f:
             dictionary = pickle.load(f)
-        return Population.from_dict(dictionary)
+        return Population.from_dict(dictionary, config)
 
 
         
