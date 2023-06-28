@@ -15,6 +15,8 @@ class Species:
     def from_dict(species_dict, config, organisms):
         species = Species(Organism.from_dict(species_dict["representative"]), species_dict["species_number"], config)
         species.age = species_dict["age"]
+        species.best_fitness = species_dict["best_fitness"]
+        species.best_fitness_age = species_dict["best_fitness_age"]
         # This is horrible, but it works and I'm tired
         species.members = set()
         for organism in organisms:
@@ -29,6 +31,8 @@ class Species:
             "age": self.age,
             "members": [m.id for m in self.members],
             "representative": self.representative.to_dict(),
+            "best_fitness": self.best_fitness,
+            "best_fitness_age": self.best_fitness_age,
         }
 
     def add_organism(self, organism):

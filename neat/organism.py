@@ -233,6 +233,8 @@ class Organism:
             "connections": [c.to_dict() for c in self.connections],
             "node_innovation_numbers": self.node_innovation_numbers,
             "species": self.species.species_number if self.species else None,
+            "fitness": self.fitness,
+
         }
         return dictionary
 
@@ -242,6 +244,7 @@ class Organism:
         organism = Organism(id, None, config, None)
         organism.node_count = organism_dict["meta"]["node_count"]
         organism.node_innovation_numbers = organism_dict["node_innovation_numbers"]
+        organism.fitness = organism_dict["fitness"]
 
         if population:
             organism.innovation_number_tracker = population.reproducer.generation_innovation_number_tracker
