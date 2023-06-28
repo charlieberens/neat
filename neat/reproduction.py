@@ -137,6 +137,7 @@ class Reproducer:
                 len(self.population.species) >= 2
                 and self.config["stagnation_threshold"] > 0
                 and species.best_fitness_age >= self.config["stagnation_threshold"]
+                and self.population.best not in species.members
             ):
                 self.population.species.remove(species)
 
