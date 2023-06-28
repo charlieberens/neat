@@ -149,5 +149,5 @@ class ProgressReporter:
             self.population.to_file(os.path.join(self.population.config["progress_directory"],"{}-{}".format(self.population.id, self.population.generation)))
 
     def complete(self):
-        # self.report(force = True)
-        pass
+        self.report(force = True)
+        # pass

@@ -77,13 +77,14 @@ class Population:
         for i in range(generations):
             self.best = self.evaluate_generation(eval_func, en_masse)
 
-            for reporter in self.reporters:
-                reporter.report()
-
             if self.config["goal_fitness"] != None:
                 if self.best.fitness >= self.config["goal_fitness"]:
                     return self.end_training(self.best)
             self.reproducer.reproduce()
+
+            for reporter in self.reporters:
+                reporter.report()
+
             self.generation += 1
 
         return self.end_training(self.best)
