@@ -105,6 +105,7 @@ class Population:
             "n": self.n,
             "generation": self.generation,
             "innovation_number": next(self.innovation_number),
+            "best": self.best.to_dict()
         }
         return dictionary
 
