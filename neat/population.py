@@ -105,7 +105,7 @@ class Population:
             "n": self.n,
             "generation": self.generation,
             "innovation_number": next(self.innovation_number),
-            "best": self.best.to_dict()
+            "best_id": self.best.id
         }
         return dictionary
 
@@ -129,6 +129,7 @@ class Population:
         population.organisms = {Organism.from_dict(organism, population=population) for organism in dictionary["organisms"]}
         population.species = {Species.from_dict(species, population.config, population.organisms) for species in dictionary["species"]}
         population.reproducer = Reproducer(population, population.innovation_number)
+        population.best = next(organism for organism in population.organisms if organism.id == dictionary["best_id"])
 
         return population
     
