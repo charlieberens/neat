@@ -116,7 +116,7 @@ class StatReporter:
             os.makedirs(self.population.config["stat_directory"])
         
         arr = [["generation"] + [s for s in self.stats]] + [[r[s] for s in self.stats] for r in self.rows]
-        
+
         if os.path.exists(path):
             with open(path, "a") as f:
                 for row in arr[1:]:
