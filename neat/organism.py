@@ -173,16 +173,27 @@ class Organism:
         layers = [[i for i in range(self.config["input_nodes"] + 1)]]
         v = set(layers[0])
 
+        out_in = dict()
+
+        for c in self.connections:
+            if out_in.get(c.output_node) is None:
+                out_in[c.output_node] = set()
+            out_in[c.output_node].add(c.input_node)
+
         while True:
             t = set()
-            for c in self.connections:
-                if c.output_node not in v:
-                    if all([i in v for i in [con.input_node for con in self.connections if con.output_node == c.output_node]]):
-                        t.add(c.output_node)
+            removal = set()
+            for output_node in out_in:
+                if all([i in v for i in out_in[output_node]]):
+                    t.add(output_node)
+                    removal.add(output_node)
             if len(t) == 0:
                 break
             v = v.union(t)
             layers.append(list(t))
+            for r in removal:
+                del out_in[r]
+                
         return [sorted(l) for l in layers]
 
     def get_layered_connections(self):
