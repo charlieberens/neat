@@ -26,6 +26,7 @@ class Organism:
         self.adjusted_fitness = None
         self.fitness = 0
         self.history = []
+        self.parent_species = None
 
     @staticmethod
     def from_file(filename: str):
@@ -502,3 +503,5 @@ class CrossOverOrganism(Organism):
         b = max([c.output_node for c in self.connections])
         if b >= self.node_count:
             print("ZOINKS")
+        
+        self.parent_species = self.parent1.species if self.parent1.fitness > self.parent2.fitness else self.parent2.species

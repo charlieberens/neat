@@ -46,6 +46,7 @@ class Reproducer:
         new_organism.id = "{}-{:02X}".format(
                 self.population.generation, next(self.generation_organism_number)
             )
+        new_organism.parent_species = organism.species
 
         # Mutate the new organism
         new_organism.mutate()
@@ -106,6 +107,7 @@ class Reproducer:
         """
         Speciate the current generation
         """
+
         for species in self.population.species:
             species.represetative = random.choice(list(species.members))
             species.members = set()
@@ -114,7 +116,13 @@ class Reproducer:
         while len(independents):
             candidate = independents.pop()
 
-            for species in self.population.species:
+            if candidate.parent_species in self.population.species:
+                if candidate.parent_species.compatible(candidate):
+                    candidate.parent_species.add_organism(candidate)
+                    continue
+            
+
+            for species in (self.population.species - {candidate.parent_species}):
                 if species.compatible(candidate):
                     species.add_organism(candidate)
                     break
@@ -123,7 +131,7 @@ class Reproducer:
                     Species(candidate, next(self.species_number), self.config)
                 )
                 species.add_organism(candidate)
-
+        
     def calculate_species_allocation(self):
         for species in self.population.species.copy():
             species.age += 1
@@ -210,5 +218,5 @@ class Reproducer:
                     else:
                         parent = random.choice(members)
                         self.population.organisms.add(self.asexual_reproduction(parent))
-
+        
         self.speciate()
