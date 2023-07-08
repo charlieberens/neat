@@ -55,7 +55,7 @@ class Population:
                 if not best or organism.fitness > best.fitness:
                     best = organism
         else:
-            for i, organism in enumerate(self.organisms):
+            for organism in self.organisms:
                 organism.fitness = eval_func(organism)
                 organism.adjusted_fitness = organism.fitness / len(organism.species.members)
                 if not best or organism.fitness > best.fitness:
@@ -75,10 +75,8 @@ class Population:
         """
 
         for i in range(generations):
-            if i != 0:
-                self.reproducer.reproduce()
-
             self.best = self.evaluate_generation(eval_func, en_masse)
+            self.reproducer.reproduce()
 
             for reporter in self.reporters:
                 reporter.report()
@@ -86,7 +84,6 @@ class Population:
             if self.config["goal_fitness"] != None:
                 if self.best.fitness >= self.config["goal_fitness"]:
                     return self.end_training(self.best)
-
                 
             self.generation += 1
 
@@ -132,12 +129,11 @@ class Population:
         population.organisms = {Organism.from_dict(organism, population=population) for organism in dictionary["organisms"]}
         population.species = {Species.from_dict(species, population.config, population.organisms) for species in dictionary["species"]}
         population.reproducer = Reproducer(population, population.innovation_number)
+
         try:
             population.best = next(organism for organism in population.organisms if organism.id == dictionary["best_id"])
         except StopIteration:
             population.best = None
-
-        population.reproducer.reproduce()
 
         return population
     
