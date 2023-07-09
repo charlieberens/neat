@@ -193,6 +193,13 @@ class Reproducer:
 
         self.calculate_species_allocation()
 
+        while len(self.population.species) > self.config["max_species_count"]:
+            worst_species_list = sorted(self.population.species, key=lambda s: s.best_fitness_age)
+            worst_species = worst_species_list[-1]
+            if self.population.best in worst_species.members:
+                worst_species = worst_species_list[-2]
+            self.population.species.remove(worst_species)
+
         for species in self.population.species:
             # Remove the worst performing organisms
             members = sorted(list(species.members), key=lambda o: o.adjusted_fitness)

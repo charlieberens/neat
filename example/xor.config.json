@@ -23,6 +23,7 @@
     "stagnation_threshold": 15,
     "culling_amount": 0.7,
     "min_species_size": 5,
+    "max_species_count": 5,
     "stat_directory": "statistics",
     "progress_directory": "progress",
     "organism_directory": "organisms"

@@ -88,6 +88,7 @@ defaults = {
     "stagnation_threshold": 20,
     "culling_amount": 0.8,
     "min_species_size": 5,
+    "max_species_count": 25,
     "stat_directory": "statistics",
     "progress_directory": "progress",
     "organism_directory": "organisms",
