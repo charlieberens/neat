@@ -201,7 +201,7 @@ class Reproducer:
 
             members = members[math.floor(len(members) * self.config["elimination_threshold"]):]
 
-            weights = [len(members) * self.config["selection_weight_scale_factor"] + i for i in range(len(members))]
+            # weights = [len(members) * self.config["selection_weight_scale_factor"] + i for i in range(len(members))]
             weights = [1 for i in range(len(members))]
 
             # Reproduce the rest
