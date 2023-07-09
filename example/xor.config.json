@@ -19,7 +19,7 @@
     "crossover_rate": 0.75,
     "interspecies_mating_rate": 0,
     "stagnation_threshold": 15,
-    "elimination_threshold": 0,
+    "elimination_threshold": 0.25,
     "min_species_size": 5,
     "stat_directory": "statistics",
     "progress_directory": "progress",

@@ -192,16 +192,17 @@ class Reproducer:
         self.calculate_species_allocation()
 
         for species in self.population.species:
-            species.age += 1
-
             # Remove the worst performing organisms
             members = sorted(list(species.members), key=lambda o: o.adjusted_fitness)
             if len(members) > 5:
                 self.population.organisms.add(members[-1])
 
             members = members[math.floor(len(members) * self.config["elimination_threshold"]):]
+            species.members = set(members)
 
-            # weights = [len(members) * self.config["selection_weight_scale_factor"] + i for i in range(len(members))]
+        for species in self.population.species:
+            species.age += 1
+
             weights = [1 for i in range(len(members))]
 
             # Reproduce the rest

@@ -123,7 +123,7 @@ class StatReporter:
                     f.write(",".join([str(col) for col in row]) + "\n")
         else:
             with open(path, "w") as f:
-                for row in arr:
+                for row in arr[1:]:
                     f.write(",".join([str(col) for col in row]) + "\n")
 
     def complete(self):
