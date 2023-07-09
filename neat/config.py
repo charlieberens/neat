@@ -96,6 +96,7 @@ defaults = {
     "stagnation_threshold": 20,
     "elimination_threshold": 0.25,
     "min_species_size": 5,
+    "selection_weight_scale_factor": 10000,
     "stat_directory": "statistics",
     "progress_directory": "progress",
     "organism_directory": "organisms",

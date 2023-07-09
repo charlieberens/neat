@@ -7,6 +7,7 @@ from neat.species import Species
 from neat.reproduction import Reproducer
 from itertools import count
 import pickle
+import os
 
 class Population:
     def __init__(
@@ -75,16 +76,26 @@ class Population:
         """
 
         for i in range(generations):
+            t = time.time()
             self.best = self.evaluate_generation(eval_func, en_masse)
-            self.reproducer.reproduce()
-
-            for reporter in self.reporters:
+            a = time.time() - t
+            
+            for reporter in [r for r in self.reporters if type(r).__name__ != "ProgressReporter"]:
                 reporter.report()
+            
+            self.reproducer.reproduce()
+            b = time.time() - a - t
+
+            if os.environ.get("DEBUG"):
+                print("Evalutation Time - {:2.4f}s, Reproduction Time - {:2.4f}s".format(a, b))
 
             if self.config["goal_fitness"] != None:
                 if self.best.fitness >= self.config["goal_fitness"]:
                     return self.end_training(self.best)
                 
+            for reporter in [r for r in self.reporters if type(r).__name__ == "ProgressReporter"]:
+                reporter.report()
+
             self.generation += 1
 
         return self.end_training(self.best)

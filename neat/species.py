@@ -48,17 +48,18 @@ class Species:
         organism_genes = {}
         representative_genes = {}
 
+
         for gene in organism.connections:
             organism_genes[gene.innovation_number] = gene
         for gene in self.representative.connections:
             representative_genes[gene.innovation_number] = gene
-
+        
         smaller_innovation_number = min(
             organism.connections[-1].innovation_number,
             self.representative.connections[-1].innovation_number,
         )
         shared_genes = set(organism_genes.keys()) & set(representative_genes.keys())
-        different_genes = set(organism_genes.keys()) ^ set(representative_genes.keys())
+        different_genes = set(organism_genes.keys() ^ representative_genes.keys()).union(set(representative_genes.keys() ^ organism_genes.keys()))
 
         W_bar = sum(
             [

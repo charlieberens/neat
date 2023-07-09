@@ -115,7 +115,7 @@ class StatReporter:
         if not os.path.exists(self.population.config["stat_directory"]):
             os.makedirs(self.population.config["stat_directory"])
         
-        arr = [["generation"] + [self.get_stat(stat) for stat in self.stats]] + self.rows
+        arr = [["generation"] + [stat for stat in self.stats]] + [[r[col] for col in r] for r in self.rows]
         
         if os.path.exists(path):
             with open(path, "a") as f:

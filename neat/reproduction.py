@@ -199,24 +199,28 @@ class Reproducer:
             if len(members) > 5:
                 self.population.organisms.add(members[-1])
 
+            members = members[math.floor(len(members) * self.config["elimination_threshold"]):]
+
+            weights = [len(members) * self.config["selection_weight_scale_factor"] + i for i in range(len(members))]
+            weights = [1 for i in range(len(members))]
+
             # Reproduce the rest
             for i in range(species.allocation - 1):
                 if random.random() < self.config["interspecies_mating_rate"]:
                     species2 = random.choice(list(self.population.species))
-                    parent1 = random.choice(list(species.members))
-                    parent2 = random.choice(list(species2.members))
+                    parent1 = random.choices(members, weights=weights)[0]
+                    parent2 = random.choices(list(species2.members))
                     self.population.organisms.add(
                         self.sexual_reproduction(parent1, parent2)
                     )
                 else:
                     if random.random() < self.config["crossover_rate"]:
-                        parent1 = random.choice(members)
-                        parent2 = random.choice(members)
+                        parent1, parent2 = random.choices(members, weights=weights, k=2)
                         self.population.organisms.add(
                             self.sexual_reproduction(parent1, parent2)
                         )
                     else:
-                        parent = random.choice(members)
+                        parent = random.choices(members, weights=weights)[0]
                         self.population.organisms.add(self.asexual_reproduction(parent))
         
         self.speciate()
