@@ -73,7 +73,6 @@ class Species:
         )
         excess_genes = len(different_genes) - disjoint_genes
         N = max(len(organism_genes), len(representative_genes))
-        N = 5
 
         delta = (
             self.config["c1"] * excess_genes + self.config["c2"] * disjoint_genes
