@@ -153,6 +153,8 @@ class Reproducer:
             species.total_adjusted_fitness = max(
                 0, sum([o.adjusted_fitness for o in species.members])
             )
+            if species.age < self.config["young_age_threshold"] and species.total_adjusted_fitness > 0:
+                species.total_adjusted_fitness *= self.config["young_species_boost"]
 
         population_total_adjusted_fitness = sum(
             [s.total_adjusted_fitness for s in self.population.species]
@@ -194,7 +196,7 @@ class Reproducer:
         for species in self.population.species:
             # Remove the worst performing organisms
             members = sorted(list(species.members), key=lambda o: o.adjusted_fitness)
-            if len(members) > 5:
+            if len(members) > 5 or self.population.best in members:
                 self.population.organisms.add(members[-1])
 
             members = members[math.floor(len(members) * self.config["culling_amount"]):]
@@ -209,9 +211,9 @@ class Reproducer:
             # Reproduce the rest
             for i in range(species.allocation - 1):
                 if random.random() < self.config["interspecies_mating_rate"]:
-                    species2 = random.choice(list(self.population.species))
+                    species2 = random.choices(list(self.population.species))[0]
                     parent1 = random.choices(members, weights=weights)[0]
-                    parent2 = random.choices(list(species2.members))
+                    parent2 = random.choices(list(species2.members))[0]
                     self.population.organisms.add(
                         self.sexual_reproduction(parent1, parent2)
                     )

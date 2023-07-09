@@ -48,19 +48,12 @@ class Organism:
         o.history = self.history[:]
         return o
     
-    def random_weight(self):
-        """
-        Generate a random weight
-        """
-        val = random.gauss(0, self.config["weight_stdev"])
-        return clamp(val, self.config["weight_min_value"], self.config["weight_max_value"])
-
     def create_connection(self, input_node, output_node, enabled, weight=None):
         """
         Add a connection to the network
         """
         if weight is None:
-            weight = self.random_weight()
+            weight = random.uniform(self.config["weight_min_value"], self.config["weight_max_value"])
 
         c = ConnectionGene(input_node, output_node, weight, enabled, self.innovation_number_tracker((self.node_innovation_numbers[input_node], self.node_innovation_numbers[output_node])))
         self.connections.append(c)
@@ -117,18 +110,22 @@ class Organism:
         
         self.create_connection(input_node, output_node, True)
 
+    def mut_weights(self):
+        for c in self.connections:
+            if random.random() < self.config["weight_mut_rate"]:
+                if random.random() < self.config["weight_perturb_rate"]:
+                    c.weight += random.uniform(-self.config["weight_perturb_amount"], self.config["weight_perturb_amount"])
+                    c.weight = clamp(c.weight, self.config["weight_min_value"], self.config["weight_max_value"])
+                else:
+                    c.weight = random.uniform(-self.config["weight_min_value"], self.config["weight_max_value"])
+
+
     def mutate(self):
         """
         Mutate the organism
         """
         # Mutate weights
-        if random.random() < self.config["weight_mut_rate"]:
-            c = random.choice(self.connections)
-            if random.random() < self.config["weight_perturb_rate"]:
-                c.weight += random.uniform(-self.config["weight_perturb_amount"], self.config["weight_perturb_amount"])
-                c.weight = clamp(c.weight, self.config["weight_min_value"], self.config["weight_max_value"])
-            else:
-                c.weight = self.random_weight()
+        self.mut_weights()
 
         # Mutate nodes
         if self.config["single_structural_mutation"]:

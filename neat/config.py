@@ -22,17 +22,13 @@ Parameters
     disjoint_scale_cutoff: int
         If the amount of genes in a organism is less than this number, N is set to 1 in speciation for disjoint and excess genese. 
     weight_mut_rate: float
-        Chance of weight mutation
+        Chance of any connection having a weight mutation
     weight_perturb_rate: float
-        Chance of perturbing weight
+        Chance of perturbing weight given that a weight mutation occurs
     weight_max_value: float
         Maximum value of a weight
     weight_min_value: float
         Minimum value of a weight
-    weight_stdev: float
-        Standard deviation initial weight
-    weight_perturb_stdev: float
-        Standard deviation of perturbed weight
     single_structural_mutation: bool
         Whether to only allow one structural mutation per mutation
     node_mut_rate: float
@@ -51,6 +47,10 @@ Parameters
         Proportion of organisms to eliminate from a species
     min_species_size: int
         Minimum number of organisms in a species
+    young_species_boost: float
+        Boost to fitness for young organisms
+    young_age_threshold: int
+        Age at which an organism is considered young
 """
 
 """
@@ -67,17 +67,18 @@ defaults = {
     "output_nodes": 1,
     "goal_fitness": None,
     "transfer_function": "modified_sigmoid",
-    "c1": 1.0,
-    "c2": 1.0,
-    "c3": 3.0,
+    "c1": 1,
+    "c2": 1,
+    "c3": 0.2,
     "delta_thresh": 3.0,
-    "disjoint_scale_cutoff": 15,
-    "weight_mut_rate": 0.8,
-    "weight_perturb_rate": 0.9,
-    "weight_max_value": 30.0,
-    "weight_min_value": -30.0,
-    "weight_stdev": 1,
-    "weight_perturb_stdev": 4,
+    "disjoint_scale_cutoff": 12,
+    "weight_mut_rate": 0.1,
+    "weight_perturb_rate": 0.8,
+    "weight_max_value": 12.0,
+    "weight_min_value": -12.0,
+    "weight_perturb_amount": 12,
+    "young_species_boost": 1.2,
+    "young_age_threshold": 10,
     "single_structural_mutation": True,
     "node_mut_rate": 0.03,
     "connection_mut_rate": 0.05,
