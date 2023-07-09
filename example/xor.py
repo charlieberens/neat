@@ -26,16 +26,14 @@ def eval_xor(organism):
 
 def main():
     config = get_config("example/xor.config.json")
+
     p = Population(200, config)
     p.add_reporter(PrintReporter())
     # p.add_reporter(StatReporter(["best_fitness", "avg_fitness", "worst_fitness"], frequency=1))
     # p.add_reporter(ProgressReporter(frequency=50))
 
     w = p.run(eval_xor, 300)
-    # print([len(s.members) for s in p.species])
 
-    # print([c.__str__() for c in w.connections])
-    print(w.evaluate([0, 0]))
     w.draw()
 
 if __name__ == "__main__":
