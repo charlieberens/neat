@@ -10,6 +10,8 @@ from neat.reporter import PrintReporter, ProgressReporter, StatReporter
 Before running this, run `source ./demos/xor.config.json` to set the correct directory for module imports.
 """
 
+# TODO - Change weights to bell curve
+
 def eval_xor(organism):
     """
     XOR fitness function
@@ -26,11 +28,14 @@ def main():
     config = get_config("example/xor.config.json")
     p = Population(200, config)
     p.add_reporter(PrintReporter())
-    p.add_reporter(StatReporter(["best_fitness", "avg_fitness", "worst_fitness"], frequency=1))
-    p.add_reporter(ProgressReporter(frequency=50))
+    # p.add_reporter(StatReporter(["best_fitness", "avg_fitness", "worst_fitness"], frequency=1))
+    # p.add_reporter(ProgressReporter(frequency=50))
 
     w = p.run(eval_xor, 300)
+    # print([len(s.members) for s in p.species])
 
+    # print([c.__str__() for c in w.connections])
+    print(w.evaluate([0, 0]))
     w.draw()
 
 if __name__ == "__main__":

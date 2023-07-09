@@ -27,7 +27,7 @@ class PrintReporter(Reporter):
 
     def report(self):
         print(
-            "Generation: {} - ID: {} - Best: {} - Species: {} - Organisms: {} - Avg Nodes: {} - Node Range: {} - Connection Range: {}".format(
+            "Generation: {} - ID: {} - Best: {:.4f} - Species: {} - Organisms: {} - Avg Nodes: {:.4f} - Node Range: {} - Connection Range: {}".format(
                 self.population.generation,
                 self.population.best.id,
                 self.population.best.fitness,
@@ -42,13 +42,13 @@ class PrintReporter(Reporter):
                 [
                     min(
                         [
-                            len([c for c in o.connections if c.enabled])
+                            len([c for c in o.connections])
                             for o in self.population.organisms
                         ]
                     ),
                     max(
                         [
-                            len([c for c in o.connections if c.enabled])
+                            len([c for c in o.connections])
                             for o in self.population.organisms
                         ]
                     ),
@@ -119,11 +119,11 @@ class StatReporter:
         
         if os.path.exists(path):
             with open(path, "a") as f:
-                for row in arr:
+                for row in arr[1:]:
                     f.write(",".join([str(col) for col in row]) + "\n")
         else:
             with open(path, "w") as f:
-                for row in arr[1:]:
+                for row in arr:
                     f.write(",".join([str(col) for col in row]) + "\n")
 
     def complete(self):

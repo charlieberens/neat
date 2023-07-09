@@ -4,8 +4,6 @@
 
 This is a Python implementation of the **NeuroEvolution of Augmenting Topologies (NEAT)** algorithm described [here](https://nn.cs.utexas.edu/downloads/papers/stanley.ec02.pdf).
 
-**NEAT** is an evolutionary algorithm for reinforcement learning based on evolving neural networks. It provides a set of mutations that change connection weights and network topology, and preserves new mutations by dividing networks into species that are protected for a number of generations.
-
 I stay mostly faithful to the original paper.
 
 ## Installation

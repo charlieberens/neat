@@ -197,12 +197,13 @@ class Reproducer:
             if len(members) > 5:
                 self.population.organisms.add(members[-1])
 
-            members = members[math.floor(len(members) * self.config["elimination_threshold"]):]
+            members = members[math.floor(len(members) * self.config["culling_amount"]):]
             species.members = set(members)
 
         for species in self.population.species:
             species.age += 1
 
+            members = list(species.members)
             weights = [1 for i in range(len(members))]
 
             # Reproduce the rest

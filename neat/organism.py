@@ -47,13 +47,20 @@ class Organism:
         o.node_innovation_numbers = self.node_innovation_numbers[:]
         o.history = self.history[:]
         return o
+    
+    def random_weight(self):
+        """
+        Generate a random weight
+        """
+        val = random.gauss(0, self.config["weight_stdev"])
+        return clamp(val, self.config["weight_min_value"], self.config["weight_max_value"])
 
     def create_connection(self, input_node, output_node, enabled, weight=None):
         """
         Add a connection to the network
         """
         if weight is None:
-            weight = random.uniform(self.config["weight_min_value"], self.config["weight_max_value"])
+            weight = self.random_weight()
 
         c = ConnectionGene(input_node, output_node, weight, enabled, self.innovation_number_tracker((self.node_innovation_numbers[input_node], self.node_innovation_numbers[output_node])))
         self.connections.append(c)
@@ -121,7 +128,7 @@ class Organism:
                 c.weight += random.uniform(-self.config["weight_perturb_amount"], self.config["weight_perturb_amount"])
                 c.weight = clamp(c.weight, self.config["weight_min_value"], self.config["weight_max_value"])
             else:
-                c.weight = random.uniform(self.config["weight_min_value"], self.config["weight_max_value"])
+                c.weight = self.random_weight()
 
         # Mutate nodes
         if self.config["single_structural_mutation"]:
@@ -409,6 +416,16 @@ class ConnectionGene:
         for attr in self.__dict__:
             setattr(c, attr, getattr(self, attr))
         return c
+
+    def __str__(self):
+        return(
+            "ConnectionGene: input_node: {}, output_node: {}, weight: {}, enabled: {}, innovation: {}".format(
+                self.input_node,
+                self.output_node,
+                self.weight,
+                self.enabled,
+                self.innovation_number,
+            ))
 
     def from_dict(dictionary):
         return ConnectionGene(dictionary["input_node"], dictionary["output_node"], dictionary["weight"], dictionary["enabled"], dictionary["innovation_number"])

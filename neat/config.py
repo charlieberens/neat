@@ -19,26 +19,20 @@ Parameters
         Speciation parameter
     delta_thresh: float
         Speciation parameter
+    disjoint_scale_cutoff: int
+        If the amount of genes in a organism is less than this number, N is set to 1 in speciation for disjoint and excess genese. 
     weight_mut_rate: float
         Chance of weight mutation
     weight_perturb_rate: float
         Chance of perturbing weight
-    weight_perturb_amount: float
-        Amount to perturb weight by
     weight_max_value: float
         Maximum value of a weight
     weight_min_value: float
         Minimum value of a weight
-    bias_mut_rate: float
-        Chance of bias mutation
-    bias_perturb_rate: float
-        Chance of perturbing bias
-    bias_perturb_amount: float
-        Amount to perturb bias by
-    bias_max_value: float
-        Maximum value of a bias
-    bias_min_value: float
-        Minimum value of a bias
+    weight_stdev: float
+        Standard deviation initial weight
+    weight_perturb_stdev: float
+        Standard deviation of perturbed weight
     single_structural_mutation: bool
         Whether to only allow one structural mutation per mutation
     node_mut_rate: float
@@ -53,7 +47,7 @@ Parameters
         Chance of interspecies mating
     stagnation_threshold: int
         Number of generations without improvement before a species is considered stagnant
-    elimination_threshold: int
+    culling_amount: int
         Proportion of organisms to eliminate from a species
     min_species_size: int
         Minimum number of organisms in a species
@@ -75,13 +69,15 @@ defaults = {
     "transfer_function": "modified_sigmoid",
     "c1": 1.0,
     "c2": 1.0,
-    "c3": 0.4,
+    "c3": 3.0,
     "delta_thresh": 3.0,
+    "disjoint_scale_cutoff": 15,
     "weight_mut_rate": 0.8,
     "weight_perturb_rate": 0.9,
-    "weight_perturb_amount": 5,
-    "weight_max_value": 10.0,
-    "weight_min_value": -10.0,
+    "weight_max_value": 30.0,
+    "weight_min_value": -30.0,
+    "weight_stdev": 1,
+    "weight_perturb_stdev": 4,
     "single_structural_mutation": True,
     "node_mut_rate": 0.03,
     "connection_mut_rate": 0.05,
@@ -89,7 +85,7 @@ defaults = {
     "crossover_rate": 0.75,
     "interspecies_mating_rate": 0.001,
     "stagnation_threshold": 20,
-    "elimination_threshold": 0.25,
+    "culling_amount": 0.8,
     "min_species_size": 5,
     "stat_directory": "statistics",
     "progress_directory": "progress",

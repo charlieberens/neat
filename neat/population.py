@@ -79,7 +79,7 @@ class Population:
             t = time.time()
             self.best = self.evaluate_generation(eval_func, en_masse)
             a = time.time() - t
-            
+
             for reporter in [r for r in self.reporters if type(r).__name__ != "ProgressReporter"]:
                 reporter.report()
             

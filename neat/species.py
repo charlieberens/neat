@@ -63,7 +63,7 @@ class Species:
 
         W_bar = sum(
             [
-                abs(organism_genes[i].weight - representative_genes[i].weight)
+                abs(organism_genes[i].weight - representative_genes[i].weight) + abs(organism_genes[i].enabled - representative_genes[i].enabled)
                 for i in shared_genes
             ]
         ) / max(len(shared_genes), 1)
@@ -72,14 +72,37 @@ class Species:
             [g for g in different_genes if g <= smaller_innovation_number]
         )
         excess_genes = len(different_genes) - disjoint_genes
-        N = max(len(organism_genes), len(representative_genes))
+
+        # TODO - Cache this value
+        initial_connection_count = (self.config["input_nodes"] + 1) * self.config["output_nodes"]
+
+        N = max(max(len(organism_genes), len(representative_genes))-initial_connection_count, 1)
+
+        if N < self.config["disjoint_scale_cutoff"]:
+            N = 2
 
         delta = (
             self.config["c1"] * excess_genes + self.config["c2"] * disjoint_genes
-        ) / N + self.config["c3"] * W_bar / (
-            self.config["weight_max_value"] - self.config["weight_min_value"]
-        )
+        ) / N + self.config["c3"] * W_bar
 
+        if delta >= self.config["delta_thresh"]:
+            pass
+            # print(excess_genes, disjoint_genes, W_bar, N, delta)
+            # print([(c.input_node, c.output_node, c.weight) for c in organism.connections])
+            # print([(c.input_node, c.output_node, c.weight) for c in self.representative.connections])
+            # print("---------------")
+            # print(["{}: {}->{}".format(g, organism_genes[g].input_node, organism_genes[g].output_node) for g in organism_genes])
+            # print(["{}: {}->{}".format(g, representative_genes[g].input_node, representative_genes[g].output_node) for g in representative_genes])
+            # # print("---------------")
+            # print(shared_genes)
+            # # print(different_genes)
+            # print(excess_genes+disjoint_genes, W_bar)
+            # print("---------------")
+        # print(len(organism_genes), len(representative_genes))
+
+        # print(delta, excess_genes, disjoint_genes, W_bar, N)
+        # print([c.weight for c in organism.connections])
+        # print(delta, excess_genes, disjoint_genes, W_bar, N)
         return delta
 
     def compatible(self, organism):
