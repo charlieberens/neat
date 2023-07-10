@@ -1,3 +1,4 @@
+import json
 import os
 from typing import List
 from neat.population import Population
@@ -57,17 +58,36 @@ class PrintReporter(Reporter):
             )
         )
         if self.species:
-            print("\n")
-            print("Max Fitness\tAvg Fitness\tN")
-            print("-----------\t-----------\t-")
-            for s in self.population.species:
-                print(
-                    "{:11.4f}\t{:11.4f}\t{}".format(
-                        max([o.fitness for o in s.members]),
+            print("Max Fitness\tSecond Fitness\tAvg Fitness\tN\tAge")
+
+            lines = []
+            for s in [s for s in self.population.species if len(s.members)]:
+                if(len(s.members) >=2):
+                    second = sorted([o.fitness for o in s.members])[-2]
+                else:
+                    second = 0
+                lines.append([max([o.fitness for o in s.members]),
+                        second,
                         sum([o.fitness for o in s.members]) / len(s.members),
-                        len(s.members),
-                    )
+                        len(s.members), s.age])
+            lines.sort(key=lambda x: x[0], reverse=True)
+
+            lines_2 = None
+            if len(lines) > 10:
+                lines_2 = lines[-4:]
+                lines = lines[:4]
+
+            for line in lines:
+                print(
+                    "{:11.4f}\t{:11.4f}\t{:11.4f}\t{}\t{}".format(line[0], line[1], line[2], line[3], line[4])
                 )
+            if lines_2:
+                print("...")
+                for line in lines_2:
+                    print(
+                        "{:11.4f}\t{:11.4f}\t{:11.4f}\t{}\t{}".format(line[0], line[1], line[2], line[3], line[4])
+                    )
+
             
 
 
@@ -89,13 +109,11 @@ class StatReporter:
         self,
         stats: List[str],
         filename: str = None,
-        by_species: bool = False,
         frequency: int = 1,
     ):
         # TODO - Implement by_species
         self.stats = stats
         self.filename = filename
-        self.by_species = by_species
         self.frequency = frequency
         self.population = None
         self.rows = []
@@ -142,6 +160,46 @@ class StatReporter:
 
     def complete(self):
         self.write_to_csv()
+
+class SpeciesStatReporter(Reporter):
+    def __init__(self, filename: str = None, frequency: int = 1):
+        super().__init__()
+        self.filename = filename
+        self.frequency = frequency
+        self.rows = []
+    
+    def report(self):
+        row = {}
+
+        for s in [s for s in self.population.species if len(s.members)]:
+            row[s.species_number] = {
+                "members": len(s.members),
+                "avg_fitness": sum([o.fitness for o in s.members]) / len(s.members),
+                "max_fitness": max([o.fitness for o in s.members]),
+                "min_fitness": min([o.fitness for o in s.members]),
+                "age": s.age,
+            }
+
+        self.rows.append(row)
+
+    def write_to_json(self):
+        self.filename = self.filename or "{}.json".format(self.population.id)
+        path = os.path.join(self.population.config["stat_directory"], self.filename)
+        # Check if stat directory exists
+        if not os.path.exists(self.population.config["stat_directory"]):
+            os.makedirs(self.population.config["stat_directory"])
+        
+        if os.path.exists(path):
+            with open(path, "ra") as f:
+                old_rows = json.load(f)
+                old_rows.append(self.rows)
+                f.write(json.dumps(old_rows))
+        else:
+            with open(path, "w") as f:
+                f.write(json.dumps(self.rows))
+
+    def complete(self):
+        self.write_to_json()
 
 
 class ProgressReporter:

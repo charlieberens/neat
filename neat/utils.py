@@ -1,3 +1,4 @@
+
 def clamp(x, min, max):
     if x < min:
         return min
@@ -5,3 +6,4 @@ def clamp(x, min, max):
         return max
     else:
         return x
+
