@@ -22,7 +22,8 @@ class PrintReporter(Reporter):
     The Print Reporter prints generation information to the console.
     """
 
-    def __init__(self):
+    def __init__(self, species=False):
+        self.species = species
         super().__init__()
 
     def report(self):
@@ -55,6 +56,19 @@ class PrintReporter(Reporter):
                 ],
             )
         )
+        if self.species:
+            print("\n")
+            print("Max Fitness\tAvg Fitness\tN")
+            print("-----------\t-----------\t-")
+            for s in self.population.species:
+                print(
+                    "{:11.4f}\t{:11.4f}\t{}".format(
+                        max([o.fitness for o in s.members]),
+                        sum([o.fitness for o in s.members]) / len(s.members),
+                        len(s.members),
+                    )
+                )
+            
 
 
 class StatReporter:

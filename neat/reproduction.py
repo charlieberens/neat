@@ -189,7 +189,7 @@ class Reproducer:
         Reproduce the current generation
         """
         self.generation_organism_number = count(0)
-        self.population.organisms = set()
+        self.population.organisms = set([self.population.best])
 
         self.calculate_species_allocation()
 
