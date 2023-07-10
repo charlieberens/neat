@@ -2,6 +2,7 @@ import json
 import os
 from typing import List
 from neat.population import Population
+from matplotlib import pyplot as plt
 
 class Reporter:
     """
@@ -190,9 +191,10 @@ class SpeciesStatReporter(Reporter):
             os.makedirs(self.population.config["stat_directory"])
         
         if os.path.exists(path):
-            with open(path, "ra") as f:
+            with open(path, "r") as f:
                 old_rows = json.load(f)
                 old_rows.append(self.rows)
+            with open(path, "w") as f:
                 f.write(json.dumps(old_rows))
         else:
             with open(path, "w") as f:
@@ -200,7 +202,6 @@ class SpeciesStatReporter(Reporter):
 
     def complete(self):
         self.write_to_json()
-
 
 class ProgressReporter:
     """

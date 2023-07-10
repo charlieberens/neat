@@ -210,8 +210,6 @@ class Reproducer:
             species.members = set(members)
 
         for species in self.population.species:
-            species.age += 1
-
             members = list(species.members)
             weights = [1 for i in range(len(members))]
 
