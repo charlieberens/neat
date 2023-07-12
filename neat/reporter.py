@@ -59,7 +59,7 @@ class PrintReporter(Reporter):
             )
         )
         if self.species:
-            print("Max Fitness\tSecond Fitness\tAvg Fitness\tN\tAge")
+            print("Species\tMax Fitness\tSecond Fitness\tAvg Fitness\tN\tAge")
 
             lines = []
             for s in [s for s in self.population.species if len(s.members)]:
@@ -67,11 +67,13 @@ class PrintReporter(Reporter):
                     second = sorted([o.fitness for o in s.members])[-2]
                 else:
                     second = 0
-                lines.append([max([o.fitness for o in s.members]),
+                lines.append([
+                        s.species_number,
+                        max([o.fitness for o in s.members]),
                         second,
                         sum([o.fitness for o in s.members]) / len(s.members),
                         len(s.members), s.age])
-            lines.sort(key=lambda x: x[0], reverse=True)
+            lines.sort(key=lambda x: (x[1], x[0]), reverse=True)
 
             lines_2 = None
             if len(lines) > 10:
@@ -80,13 +82,13 @@ class PrintReporter(Reporter):
 
             for line in lines:
                 print(
-                    "{:11.4f}\t{:11.4f}\t{:11.4f}\t{}\t{}".format(line[0], line[1], line[2], line[3], line[4])
+                    "{}\t{:11.4f}\t{:11.4f}\t{:11.4f}\t{}\t{}".format(line[0], line[1], line[2], line[3], line[4], line[5])
                 )
             if lines_2:
                 print("...")
                 for line in lines_2:
                     print(
-                        "{:11.4f}\t{:11.4f}\t{:11.4f}\t{}\t{}".format(line[0], line[1], line[2], line[3], line[4])
+                        "{}\t{:11.4f}\t{:11.4f}\t{:11.4f}\t{}\t{}".format(line[0], line[1], line[2], line[3], line[4], line[5])
                     )
 
             

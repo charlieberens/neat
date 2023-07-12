@@ -5,14 +5,11 @@ from neat.organism import Organism
 from neat.population import Population
 from neat.config import get_config
 from neat.reporter import PrintReporter, ProgressReporter, StatReporter, SpeciesStatReporter
-from neat.livereporter import LiveSpeciesStatReporter
 from neat.plotting import plot_species
 
 """
 Before running this, run `source ./demos/xor.config.json` to set the correct directory for module imports.
 """
-
-# TODO - Change weights to bell curve
 
 def eval_xor(organism):
     """
@@ -30,16 +27,15 @@ def main():
     config = get_config("example/xor.config.json")
 
     p = Population(200, config)
-    p.add_reporter(PrintReporter())
-    # p.add_reporter(SpeciesStatReporter())
-    p.add_reporter(LiveSpeciesStatReporter())
+    p.add_reporter(PrintReporter(species=True))
+    p.add_reporter(SpeciesStatReporter())
     # p.add_reporter(StatReporter(["best_fitness", "avg_fitness", "worst_fitness"], frequency=1))
     # p.add_reporter(ProgressReporter(frequency=50))
 
     w = p.run(eval_xor, 300)
 
-    # w.draw()
-    # plot_species("statistics/{}.json".format(p.id))
+    w.draw()
+    plot_species("statistics/{}.json".format(p.id))
     
 
 
